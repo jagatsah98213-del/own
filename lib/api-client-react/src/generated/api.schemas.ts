@@ -40,6 +40,7 @@ export const PayoutMethod = {
   BANK_TRANSFER: 'BANK_TRANSFER',
   PHONEPE: 'PHONEPE',
   PAYPAL: 'PAYPAL',
+  ESEWA: 'ESEWA',
 } as const;
 
 export type SlotPurpose = typeof SlotPurpose[keyof typeof SlotPurpose];

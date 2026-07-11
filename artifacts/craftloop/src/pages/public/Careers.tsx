@@ -213,6 +213,7 @@ export default function Careers() {
                           <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
                           <SelectItem value="PHONEPE">PhonePe</SelectItem>
                           <SelectItem value="PAYPAL">PayPal</SelectItem>
+                          <SelectItem value="ESEWA">eSewa</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

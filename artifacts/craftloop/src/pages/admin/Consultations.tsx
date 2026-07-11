@@ -116,14 +116,8 @@ export default function Consultations() {
 
     setIsCreatingWeekly(true);
     try {
-      // Create slots in batches to avoid overwhelming the server
       for (const slot of allSlots) {
-        await new Promise<void>((resolve, reject) => {
-          createSlot.mutate(
-            { data: { ...slot, purpose: "CLIENT_MEETING", capacity: 1 } },
-            { onSuccess: () => resolve(), onError: reject }
-          );
-        });
+        await createSlot.mutateAsync({ data: { ...slot, purpose: "CLIENT_MEETING", capacity: 1 } });
       }
       setWeeklyDialogOpen(false);
       weeklyForm.reset({ days: [1, 2, 3, 4, 5], times: ["10:00"], meetLink: "", weeks: 4 });

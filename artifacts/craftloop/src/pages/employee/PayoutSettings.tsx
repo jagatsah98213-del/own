@@ -20,6 +20,7 @@ const payoutSchema = z.object({
   routingNumber: z.string().optional(),
   paypalEmail: z.string().email("Invalid email").optional().or(z.literal("")),
   phonePeNumber: z.string().optional(),
+  esewaId: z.string().optional(),
 });
 
 export default function PayoutSettings() {
@@ -37,6 +38,7 @@ export default function PayoutSettings() {
       routingNumber: "",
       paypalEmail: "",
       phonePeNumber: "",
+      esewaId: "",
     }
   });
 
@@ -52,6 +54,7 @@ export default function PayoutSettings() {
         routingNumber: details.routingNumber || "",
         paypalEmail: details.paypalEmail || "",
         phonePeNumber: details.phonePeNumber || "",
+        esewaId: details.esewaId || "",
       });
       initialized.current = true;
     }
@@ -70,6 +73,9 @@ export default function PayoutSettings() {
     } else if (values.payoutMethod === "PHONEPE") {
       if (!values.phonePeNumber) { toast({ variant: "destructive", title: "Validation", description: "PhonePe number is required" }); return; }
       details = { phonePeNumber: values.phonePeNumber };
+    } else if (values.payoutMethod === "ESEWA") {
+      if (!values.esewaId) { toast({ variant: "destructive", title: "Validation", description: "eSewa ID is required" }); return; }
+      details = { esewaId: values.esewaId };
     }
 
     updateSettings.mutate({ data: { payoutMethod: values.payoutMethod, payoutDetails: details } }, {
@@ -113,6 +119,7 @@ export default function PayoutSettings() {
                       <SelectItem value="BANK_TRANSFER">Direct Bank Transfer</SelectItem>
                       <SelectItem value="PHONEPE">PhonePe</SelectItem>
                       <SelectItem value="PAYPAL">PayPal</SelectItem>
+                      <SelectItem value="ESEWA">eSewa</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -165,6 +172,18 @@ export default function PayoutSettings() {
                     <FormItem>
                       <FormLabel className="font-semibold">PhonePe Mobile Number / UPI ID *</FormLabel>
                       <FormControl><Input className="h-12 rounded-xl bg-muted/50" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
+              )}
+
+              {method === "ESEWA" && (
+                <div className="animate-in fade-in slide-in-from-top-4 duration-300">
+                  <FormField control={form.control} name="esewaId" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold">eSewa ID / Mobile Number *</FormLabel>
+                      <FormControl><Input className="h-12 rounded-xl bg-muted/50" placeholder="eSewa registered number or ID" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />

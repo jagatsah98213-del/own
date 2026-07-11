@@ -6,6 +6,7 @@ export const payoutMethodEnum = pgEnum("payout_method", [
   "BANK_TRANSFER",
   "PHONEPE",
   "PAYPAL",
+  "ESEWA",
 ]);
 
 export const slotPurposeEnum = pgEnum("slot_purpose", [
