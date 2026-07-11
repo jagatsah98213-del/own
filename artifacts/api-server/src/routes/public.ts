@@ -40,7 +40,7 @@ router.get("/public/services", async (_req, res) => {
   res.json(ListPublicServicesResponse.parse(rows));
 });
 
-router.get("/public/portfolio-items", async (req, res) => {
+router.get(["/public/portfolio-items", "/public/portfolio"], async (req, res) => {
   const query = ListPublicPortfolioItemsQueryParams.parse(req.query);
   const rows = await db
     .select()

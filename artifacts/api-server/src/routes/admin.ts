@@ -115,48 +115,50 @@ function generateTempPassword(): string {
 
 router.get("/admin/dashboard", async (_req, res) => {
   const now = new Date();
-  const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-  const [newApplicants] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(applicantsTable)
-    .where(eq(applicantsTable.status, "applied"));
+  const [
+    [newApplicants],
+    [interviewsThisWeek],
+    [activeProjects],
+    [pendingPayouts],
+    [newInquiries],
+    [upcomingConsultations],
+    applicantsByStatusRows,
+    projectsByStatusRows,
+  ] = await Promise.all([
+    db.select({ count: sql<number>`count(*)::int` })
+      .from(applicantsTable)
+      .where(eq(applicantsTable.status, "applied")),
 
-  const [interviewsThisWeek] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(interviewBookingsTable)
-    .innerJoin(slotsTable, eq(interviewBookingsTable.slotId, slotsTable.id))
-    .where(and(gte(slotsTable.date, now.toISOString().slice(0, 10)), eq(interviewBookingsTable.status, "scheduled")));
+    db.select({ count: sql<number>`count(*)::int` })
+      .from(interviewBookingsTable)
+      .innerJoin(slotsTable, eq(interviewBookingsTable.slotId, slotsTable.id))
+      .where(and(gte(slotsTable.date, now.toISOString().slice(0, 10)), eq(interviewBookingsTable.status, "scheduled"))),
 
-  const [activeProjects] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(projectsTable)
-    .where(eq(projectsTable.status, "in_progress"));
+    db.select({ count: sql<number>`count(*)::int` })
+      .from(projectsTable)
+      .where(eq(projectsTable.status, "in_progress")),
 
-  const [pendingPayouts] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(paymentsTable)
-    .where(eq(paymentsTable.status, "pending"));
+    db.select({ count: sql<number>`count(*)::int` })
+      .from(paymentsTable)
+      .where(eq(paymentsTable.status, "pending")),
 
-  const [newInquiries] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(clientInquiriesTable)
-    .where(eq(clientInquiriesTable.status, "new"));
+    db.select({ count: sql<number>`count(*)::int` })
+      .from(clientInquiriesTable)
+      .where(eq(clientInquiriesTable.status, "new")),
 
-  const [upcomingConsultations] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(meetingBookingsTable)
-    .where(eq(meetingBookingsTable.status, "confirmed"));
+    db.select({ count: sql<number>`count(*)::int` })
+      .from(meetingBookingsTable)
+      .where(eq(meetingBookingsTable.status, "confirmed")),
 
-  const applicantsByStatusRows = await db
-    .select({ status: applicantsTable.status, count: sql<number>`count(*)::int` })
-    .from(applicantsTable)
-    .groupBy(applicantsTable.status);
+    db.select({ status: applicantsTable.status, count: sql<number>`count(*)::int` })
+      .from(applicantsTable)
+      .groupBy(applicantsTable.status),
 
-  const projectsByStatusRows = await db
-    .select({ status: projectsTable.status, count: sql<number>`count(*)::int` })
-    .from(projectsTable)
-    .groupBy(projectsTable.status);
+    db.select({ status: projectsTable.status, count: sql<number>`count(*)::int` })
+      .from(projectsTable)
+      .groupBy(projectsTable.status),
+  ]);
 
   res.json(
     GetAdminDashboardResponse.parse({

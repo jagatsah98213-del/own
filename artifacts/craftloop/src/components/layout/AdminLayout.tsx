@@ -6,7 +6,7 @@ import {
   FolderKanban, CreditCard, Settings, History,
   LogOut, Briefcase, Menu
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -15,11 +15,14 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const logout = useLogout();
   const [open, setOpen] = useState(false);
 
+  useEffect(() => {
+    if (!isLoading && (!user || user.role !== "ADMIN")) {
+      setLocation("/admin/login");
+    }
+  }, [isLoading, user, setLocation]);
+
   if (isLoading) return <div className="min-h-screen bg-background" />;
-  if (!user || user.role !== "ADMIN") {
-    setLocation("/admin/login");
-    return null;
-  }
+  if (!user || user.role !== "ADMIN") return null;
 
   const navItems = [
     { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },

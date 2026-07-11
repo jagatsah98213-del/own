@@ -195,8 +195,8 @@ export default function Careers() {
                     )} />
                     <FormField control={form.control} name="expectedRate" render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="font-semibold">Expected Rate *</FormLabel>
-                        <FormControl><Input className="h-12 rounded-xl" placeholder="e.g. $45/hr or monthly salary" {...field} /></FormControl>
+                        <FormLabel className="font-semibold">Price / Service *</FormLabel>
+                        <FormControl><Input className="h-12 rounded-xl" placeholder="e.g. $150/logo, $45/hr, $500/video" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
