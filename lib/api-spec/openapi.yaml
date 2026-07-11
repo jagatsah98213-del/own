@@ -3,13 +3,16 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Craftloop digital services agency API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: auth
+  - name: public
+  - name: employee
+  - name: admin
 paths:
   /healthz:
     get:
@@ -24,6 +27,1075 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ---------- AUTH ----------
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Log in as admin or employee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthLoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Log out
+      responses:
+        "204":
+          description: Logged out
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      summary: Get the current logged-in user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "401":
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ---------- PUBLIC ----------
+  /public/services:
+    get:
+      operationId: listPublicServices
+      tags: [public]
+      summary: List active services
+      responses:
+        "200":
+          description: Services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Service"
+  /public/portfolio:
+    get:
+      operationId: listPublicPortfolioItems
+      tags: [public]
+      summary: List portfolio items, optionally filtered by service category
+      parameters:
+        - name: category
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/ServiceCategory"
+      responses:
+        "200":
+          description: Portfolio items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PortfolioItem"
+  /public/testimonials:
+    get:
+      operationId: listPublicTestimonials
+      tags: [public]
+      summary: List published testimonials
+      responses:
+        "200":
+          description: Testimonials
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Testimonial"
+  /public/meeting-slots:
+    get:
+      operationId: listPublicMeetingSlots
+      tags: [public]
+      summary: List open consultation slots
+      responses:
+        "200":
+          description: Open slots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Slot"
+  /public/interview-slots:
+    get:
+      operationId: listPublicInterviewSlots
+      tags: [public]
+      summary: List open interview slots for a given applicant to self-book
+      parameters:
+        - name: applicantId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Open interview slots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Slot"
+  /public/inquiries:
+    post:
+      operationId: createInquiry
+      tags: [public]
+      summary: Submit a client quote request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientInquiryInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientInquiry"
+  /public/meeting-bookings:
+    post:
+      operationId: createMeetingBooking
+      tags: [public]
+      summary: Book a free consultation slot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeetingBookingInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingBooking"
+  /public/applicants:
+    post:
+      operationId: createApplicant
+      tags: [public]
+      summary: Submit a freelancer application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApplicantInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Applicant"
+  /public/interview-bookings:
+    post:
+      operationId: createInterviewBooking
+      tags: [public]
+      summary: Applicant self-books an interview slot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InterviewBookingInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewBooking"
+
+  # ---------- EMPLOYEE ----------
+  /employee/assignments:
+    get:
+      operationId: listEmployeeAssignments
+      tags: [employee]
+      summary: List the logged-in employee's project assignments
+      responses:
+        "200":
+          description: Assignments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EmployeeAssignment"
+  /employee/assignments/{id}:
+    patch:
+      operationId: updateEmployeeAssignment
+      tags: [employee]
+      summary: Submit or update a deliverable for an assignment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmployeeAssignmentUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmployeeAssignment"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /employee/payout-settings:
+    get:
+      operationId: getEmployeePayoutSettings
+      tags: [employee]
+      summary: Get the logged-in employee's payout settings
+      responses:
+        "200":
+          description: Payout settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PayoutSettings"
+    patch:
+      operationId: updateEmployeePayoutSettings
+      tags: [employee]
+      summary: Update the logged-in employee's payout settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PayoutSettingsUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PayoutSettings"
+  /employee/payments:
+    get:
+      operationId: listEmployeePayments
+      tags: [employee]
+      summary: List payments owed to the logged-in employee
+      responses:
+        "200":
+          description: Payments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Payment"
+  /employee/password:
+    patch:
+      operationId: updateEmployeePassword
+      tags: [employee]
+      summary: Change the logged-in employee's password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordUpdateInput"
+      responses:
+        "204":
+          description: Password changed
+        "400":
+          description: Invalid current password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ---------- ADMIN ----------
+  /admin/dashboard:
+    get:
+      operationId: getAdminDashboard
+      tags: [admin]
+      summary: Admin dashboard summary
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminDashboard"
+  /admin/applicants:
+    get:
+      operationId: listAdminApplicants
+      tags: [admin]
+      summary: List applicants
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: serviceCategory
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/ServiceCategory"
+      responses:
+        "200":
+          description: Applicants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Applicant"
+  /admin/applicants/{id}:
+    get:
+      operationId: getAdminApplicant
+      tags: [admin]
+      summary: Get an applicant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Applicant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Applicant"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateAdminApplicant
+      tags: [admin]
+      summary: Update an applicant's status or notes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminApplicantUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Applicant"
+  /admin/applicants/{id}/select:
+    post:
+      operationId: selectApplicant
+      tags: [admin]
+      summary: Select an applicant, creating their Employee + User account
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Applicant hired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HireResult"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /admin/applicants/{id}/reject:
+    post:
+      operationId: rejectApplicant
+      tags: [admin]
+      summary: Reject an applicant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Applicant rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Applicant"
+  /admin/interview-slots:
+    get:
+      operationId: listAdminInterviewSlots
+      tags: [admin]
+      summary: List interview slots
+      responses:
+        "200":
+          description: Slots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Slot"
+    post:
+      operationId: createAdminInterviewSlot
+      tags: [admin]
+      summary: Open an interview slot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SlotInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Slot"
+  /admin/interview-slots/{id}:
+    patch:
+      operationId: updateAdminInterviewSlot
+      tags: [admin]
+      summary: Update an interview slot
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SlotUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Slot"
+  /admin/meeting-slots:
+    get:
+      operationId: listAdminMeetingSlots
+      tags: [admin]
+      summary: List consultation slots
+      responses:
+        "200":
+          description: Slots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Slot"
+    post:
+      operationId: createAdminMeetingSlot
+      tags: [admin]
+      summary: Open a consultation slot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SlotInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Slot"
+  /admin/meeting-slots/{id}:
+    patch:
+      operationId: updateAdminMeetingSlot
+      tags: [admin]
+      summary: Update a consultation slot
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SlotUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Slot"
+  /admin/meeting-bookings:
+    get:
+      operationId: listAdminMeetingBookings
+      tags: [admin]
+      summary: List consultation bookings
+      responses:
+        "200":
+          description: Bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MeetingBooking"
+  /admin/meeting-bookings/{id}:
+    patch:
+      operationId: updateAdminMeetingBooking
+      tags: [admin]
+      summary: Confirm, reschedule, or cancel a consultation booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeetingBookingUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingBooking"
+  /admin/employees:
+    get:
+      operationId: listAdminEmployees
+      tags: [admin]
+      summary: List employees
+      responses:
+        "200":
+          description: Employees
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Employee"
+    post:
+      operationId: createAdminEmployee
+      tags: [admin]
+      summary: Manually add an employee (bypassing the applicant flow)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminEmployeeInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HireResult"
+  /admin/employees/{id}:
+    patch:
+      operationId: updateAdminEmployee
+      tags: [admin]
+      summary: Update an employee (e.g. active/inactive)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminEmployeeUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+  /admin/inquiries:
+    get:
+      operationId: listAdminInquiries
+      tags: [admin]
+      summary: List client inquiries
+      responses:
+        "200":
+          description: Inquiries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClientInquiry"
+  /admin/inquiries/{id}:
+    patch:
+      operationId: updateAdminInquiry
+      tags: [admin]
+      summary: Update a client inquiry's status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InquiryUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientInquiry"
+  /admin/inquiries/{id}/convert-to-project:
+    post:
+      operationId: convertInquiryToProject
+      tags: [admin]
+      summary: Convert a client inquiry into a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConvertInquiryInput"
+      responses:
+        "201":
+          description: Project created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+  /admin/projects:
+    get:
+      operationId: listAdminProjects
+      tags: [admin]
+      summary: List projects
+      responses:
+        "200":
+          description: Projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Project"
+    post:
+      operationId: createAdminProject
+      tags: [admin]
+      summary: Create a project directly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+  /admin/projects/{id}:
+    patch:
+      operationId: updateAdminProject
+      tags: [admin]
+      summary: Update a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+  /admin/projects/{id}/assignments:
+    post:
+      operationId: createAdminProjectAssignment
+      tags: [admin]
+      summary: Assign an employee to a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignmentInput"
+      responses:
+        "201":
+          description: Assigned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmployeeAssignment"
+  /admin/payments:
+    get:
+      operationId: listAdminPayments
+      tags: [admin]
+      summary: List payments
+      responses:
+        "200":
+          description: Payments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Payment"
+    post:
+      operationId: createAdminPayment
+      tags: [admin]
+      summary: Create a payment record for a project/employee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+  /admin/payments/{id}:
+    patch:
+      operationId: updateAdminPayment
+      tags: [admin]
+      summary: Mark a payment as paid or update its details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+  /admin/services:
+    get:
+      operationId: listAdminServices
+      tags: [admin]
+      summary: List all services
+      responses:
+        "200":
+          description: Services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Service"
+    post:
+      operationId: createAdminService
+      tags: [admin]
+      summary: Create a service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Service"
+  /admin/services/{id}:
+    patch:
+      operationId: updateAdminService
+      tags: [admin]
+      summary: Update a service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Service"
+    delete:
+      operationId: deleteAdminService
+      tags: [admin]
+      summary: Delete a service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+  /admin/portfolio-items:
+    get:
+      operationId: listAdminPortfolioItems
+      tags: [admin]
+      summary: List all portfolio items
+      responses:
+        "200":
+          description: Portfolio items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PortfolioItem"
+    post:
+      operationId: createAdminPortfolioItem
+      tags: [admin]
+      summary: Create a portfolio item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PortfolioItemInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioItem"
+  /admin/portfolio-items/{id}:
+    patch:
+      operationId: updateAdminPortfolioItem
+      tags: [admin]
+      summary: Update a portfolio item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PortfolioItemUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioItem"
+    delete:
+      operationId: deleteAdminPortfolioItem
+      tags: [admin]
+      summary: Delete a portfolio item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+  /admin/testimonials:
+    get:
+      operationId: listAdminTestimonials
+      tags: [admin]
+      summary: List all testimonials
+      responses:
+        "200":
+          description: Testimonials
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Testimonial"
+    post:
+      operationId: createAdminTestimonial
+      tags: [admin]
+      summary: Create a testimonial
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestimonialInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Testimonial"
+  /admin/testimonials/{id}:
+    patch:
+      operationId: updateAdminTestimonial
+      tags: [admin]
+      summary: Update or publish a testimonial
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestimonialUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Testimonial"
+    delete:
+      operationId: deleteAdminTestimonial
+      tags: [admin]
+      summary: Delete a testimonial
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+  /admin/audit-logs:
+    get:
+      operationId: listAdminAuditLogs
+      tags: [admin]
+      summary: Searchable history of sensitive admin actions
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Audit logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuditLog"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +1106,573 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    Role:
+      type: string
+      enum: [ADMIN, EMPLOYEE]
+
+    ServiceCategory:
+      type: string
+      enum:
+        - WEB_DEVELOPMENT
+        - VIDEO_EDITING
+        - PHOTOGRAPHY_VIDEOGRAPHY
+        - GRAPHIC_DESIGN
+        - CONTENT_WRITING
+        - SEO_DIGITAL_MARKETING
+
+    PayoutMethod:
+      type: string
+      enum: [BANK_TRANSFER, PHONEPE, PAYPAL]
+
+    SlotPurpose:
+      type: string
+      enum: [INTERVIEW, CLIENT_MEETING]
+
+    AuthLoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string }
+        password: { type: string, minLength: 1 }
+
+    AuthUser:
+      type: object
+      required: [id, email, role]
+      properties:
+        id: { type: integer }
+        email: { type: string }
+        role:
+          $ref: "#/components/schemas/Role"
+        employeeId:
+          type: ["integer", "null"]
+
+    Service:
+      type: object
+      required: [id, category, title, slug, description, isActive, sortOrder]
+      properties:
+        id: { type: integer }
+        category:
+          $ref: "#/components/schemas/ServiceCategory"
+        title: { type: string }
+        slug: { type: string }
+        description: { type: string }
+        icon:
+          type: ["string", "null"]
+        startingPrice:
+          type: ["string", "null"]
+        isActive: { type: boolean }
+        sortOrder: { type: integer }
+    ServiceInput:
+      type: object
+      required: [category, title, slug, description]
+      properties:
+        category:
+          $ref: "#/components/schemas/ServiceCategory"
+        title: { type: string, minLength: 1 }
+        slug: { type: string, minLength: 1 }
+        description: { type: string, minLength: 1 }
+        icon: { type: string }
+        startingPrice: { type: string }
+        isActive: { type: boolean }
+        sortOrder: { type: integer }
+    ServiceUpdate:
+      type: object
+      properties:
+        title: { type: string, minLength: 1 }
+        slug: { type: string, minLength: 1 }
+        description: { type: string, minLength: 1 }
+        icon: { type: string }
+        startingPrice: { type: string }
+        isActive: { type: boolean }
+        sortOrder: { type: integer }
+
+    PortfolioItem:
+      type: object
+      required: [id, serviceCategory, title, mediaType, mediaUrl, isFeatured, sortOrder]
+      properties:
+        id: { type: integer }
+        serviceCategory:
+          $ref: "#/components/schemas/ServiceCategory"
+        title: { type: string }
+        description:
+          type: ["string", "null"]
+        mediaType: { type: string, enum: [image, video, link] }
+        mediaUrl: { type: string }
+        thumbnailUrl:
+          type: ["string", "null"]
+        isFeatured: { type: boolean }
+        sortOrder: { type: integer }
+    PortfolioItemInput:
+      type: object
+      required: [serviceCategory, title, mediaType, mediaUrl]
+      properties:
+        serviceCategory:
+          $ref: "#/components/schemas/ServiceCategory"
+        title: { type: string, minLength: 1 }
+        description: { type: string }
+        mediaType: { type: string, enum: [image, video, link] }
+        mediaUrl: { type: string, minLength: 1 }
+        thumbnailUrl: { type: string }
+        isFeatured: { type: boolean }
+        sortOrder: { type: integer }
+    PortfolioItemUpdate:
+      type: object
+      properties:
+        title: { type: string, minLength: 1 }
+        description: { type: string }
+        mediaType: { type: string, enum: [image, video, link] }
+        mediaUrl: { type: string, minLength: 1 }
+        thumbnailUrl: { type: string }
+        isFeatured: { type: boolean }
+        sortOrder: { type: integer }
+
+    Testimonial:
+      type: object
+      required: [id, clientName, quote, rating, isPublished]
+      properties:
+        id: { type: integer }
+        clientName: { type: string }
+        quote: { type: string }
+        rating: { type: integer }
+        isPublished: { type: boolean }
+    TestimonialInput:
+      type: object
+      required: [clientName, quote, rating]
+      properties:
+        clientName: { type: string, minLength: 1 }
+        quote: { type: string, minLength: 1 }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        isPublished: { type: boolean }
+    TestimonialUpdate:
+      type: object
+      properties:
+        clientName: { type: string, minLength: 1 }
+        quote: { type: string, minLength: 1 }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        isPublished: { type: boolean }
+
+    ClientInquiry:
+      type: object
+      required: [id, name, email, phone, serviceNeeded, projectDetails, status, createdAt]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        serviceNeeded:
+          $ref: "#/components/schemas/ServiceCategory"
+        projectDetails: { type: string }
+        budgetRange:
+          type: ["string", "null"]
+        timeline:
+          type: ["string", "null"]
+        status: { type: string, enum: [new, contacted, converted, closed] }
+        createdAt: { type: string, format: date-time }
+    ClientInquiryInput:
+      type: object
+      required: [name, email, phone, serviceNeeded, projectDetails]
+      properties:
+        name: { type: string, minLength: 1 }
+        email: { type: string }
+        phone: { type: string, minLength: 1 }
+        serviceNeeded:
+          $ref: "#/components/schemas/ServiceCategory"
+        projectDetails: { type: string, minLength: 1 }
+        budgetRange: { type: string }
+        timeline: { type: string }
+    InquiryUpdate:
+      type: object
+      properties:
+        status: { type: string, enum: [new, contacted, converted, closed] }
+
+    Slot:
+      type: object
+      required: [id, purpose, date, startTime, capacity, booked]
+      properties:
+        id: { type: integer }
+        purpose:
+          $ref: "#/components/schemas/SlotPurpose"
+        date: { type: string, format: date }
+        startTime: { type: string }
+        capacity: { type: integer }
+        booked: { type: integer }
+        meetLink:
+          type: ["string", "null"]
+    SlotInput:
+      type: object
+      required: [purpose, date, startTime]
+      properties:
+        purpose:
+          $ref: "#/components/schemas/SlotPurpose"
+        date: { type: string, format: date }
+        startTime: { type: string, minLength: 1 }
+        capacity: { type: integer, minimum: 1 }
+        meetLink: { type: string }
+    SlotUpdate:
+      type: object
+      properties:
+        date: { type: string, format: date }
+        startTime: { type: string, minLength: 1 }
+        capacity: { type: integer, minimum: 1 }
+        meetLink: { type: string }
+
+    InterviewBooking:
+      type: object
+      required: [id, applicantId, slotId, status, createdAt]
+      properties:
+        id: { type: integer }
+        applicantId: { type: integer }
+        slotId: { type: integer }
+        status: { type: string, enum: [scheduled, completed, no_show, cancelled] }
+        createdAt: { type: string, format: date-time }
+    InterviewBookingInput:
+      type: object
+      required: [applicantId, slotId]
+      properties:
+        applicantId: { type: integer }
+        slotId: { type: integer }
+
+    MeetingBooking:
+      type: object
+      required: [id, slotId, clientName, clientEmail, clientPhone, status, createdAt]
+      properties:
+        id: { type: integer }
+        slotId: { type: integer }
+        clientName: { type: string }
+        clientEmail: { type: string }
+        clientPhone: { type: string }
+        notes:
+          type: ["string", "null"]
+        status: { type: string, enum: [pending, confirmed, cancelled] }
+        createdAt: { type: string, format: date-time }
+        slot:
+          $ref: "#/components/schemas/Slot"
+    MeetingBookingInput:
+      type: object
+      required: [slotId, clientName, clientEmail, clientPhone]
+      properties:
+        slotId: { type: integer }
+        clientName: { type: string, minLength: 1 }
+        clientEmail: { type: string }
+        clientPhone: { type: string, minLength: 1 }
+        notes: { type: string }
+    MeetingBookingUpdate:
+      type: object
+      properties:
+        status: { type: string, enum: [pending, confirmed, cancelled] }
+
+    Applicant:
+      type: object
+      required:
+        - id
+        - fullName
+        - email
+        - phone
+        - serviceCategory
+        - status
+        - createdAt
+      properties:
+        id: { type: integer }
+        fullName: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        serviceCategory:
+          $ref: "#/components/schemas/ServiceCategory"
+        portfolioLinks:
+          type: array
+          items: { type: string }
+        yearsExperience:
+          type: ["integer", "null"]
+        equipmentOwned:
+          type: ["string", "null"]
+        availability:
+          type: ["string", "null"]
+        expectedRate:
+          type: ["string", "null"]
+        preferredPayout:
+          oneOf:
+            - $ref: "#/components/schemas/PayoutMethod"
+            - type: "null"
+        coverNote:
+          type: ["string", "null"]
+        resumeUrl:
+          type: ["string", "null"]
+        status: { type: string, enum: [applied, interview_scheduled, interviewed, selected, rejected] }
+        adminNotes:
+          type: ["string", "null"]
+        createdAt: { type: string, format: date-time }
+    ApplicantInput:
+      type: object
+      required: [fullName, email, phone, serviceCategory]
+      properties:
+        fullName: { type: string, minLength: 1 }
+        email: { type: string }
+        phone: { type: string, minLength: 1 }
+        serviceCategory:
+          $ref: "#/components/schemas/ServiceCategory"
+        portfolioLinks:
+          type: array
+          items: { type: string }
+        yearsExperience: { type: integer }
+        equipmentOwned: { type: string }
+        availability: { type: string }
+        expectedRate: { type: string }
+        preferredPayout:
+          $ref: "#/components/schemas/PayoutMethod"
+        coverNote: { type: string }
+        resumeUrl: { type: string }
+    AdminApplicantUpdate:
+      type: object
+      properties:
+        status: { type: string, enum: [applied, interview_scheduled, interviewed, selected, rejected] }
+        adminNotes: { type: string }
+
+    Employee:
+      type: object
+      required: [id, userId, fullName, email, phone, serviceCategory, isActive, createdAt]
+      properties:
+        id: { type: integer }
+        applicantId:
+          type: ["integer", "null"]
+        userId: { type: integer }
+        fullName: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        serviceCategory:
+          $ref: "#/components/schemas/ServiceCategory"
+        isActive: { type: boolean }
+        payoutMethod:
+          oneOf:
+            - $ref: "#/components/schemas/PayoutMethod"
+            - type: "null"
+        payoutDetails:
+          type: ["object", "null"]
+          additionalProperties: true
+        createdAt: { type: string, format: date-time }
+    AdminEmployeeInput:
+      type: object
+      required: [fullName, email, phone, serviceCategory, password]
+      properties:
+        fullName: { type: string, minLength: 1 }
+        email: { type: string }
+        phone: { type: string, minLength: 1 }
+        serviceCategory:
+          $ref: "#/components/schemas/ServiceCategory"
+        password: { type: string, minLength: 8 }
+    AdminEmployeeUpdate:
+      type: object
+      properties:
+        isActive: { type: boolean }
+        fullName: { type: string, minLength: 1 }
+        phone: { type: string, minLength: 1 }
+        serviceCategory:
+          $ref: "#/components/schemas/ServiceCategory"
+
+    HireResult:
+      type: object
+      required: [employee, temporaryPassword]
+      properties:
+        employee:
+          $ref: "#/components/schemas/Employee"
+        temporaryPassword: { type: string }
+
+    PayoutSettings:
+      type: object
+      required: [employeeId]
+      properties:
+        employeeId: { type: integer }
+        payoutMethod:
+          oneOf:
+            - $ref: "#/components/schemas/PayoutMethod"
+            - type: "null"
+        payoutDetails:
+          type: ["object", "null"]
+          additionalProperties: true
+    PayoutSettingsUpdate:
+      type: object
+      required: [payoutMethod, payoutDetails]
+      properties:
+        payoutMethod:
+          $ref: "#/components/schemas/PayoutMethod"
+        payoutDetails:
+          type: object
+          additionalProperties: true
+
+    PasswordUpdateInput:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword: { type: string, minLength: 1 }
+        newPassword: { type: string, minLength: 8 }
+
+    Project:
+      type: object
+      required:
+        - id
+        - clientName
+        - clientEmail
+        - serviceCategory
+        - title
+        - status
+        - clientPaymentReceived
+        - createdAt
+      properties:
+        id: { type: integer }
+        inquiryId:
+          type: ["integer", "null"]
+        clientName: { type: string }
+        clientEmail: { type: string }
+        clientPhone:
+          type: ["string", "null"]
+        serviceCategory:
+          $ref: "#/components/schemas/ServiceCategory"
+        title: { type: string }
+        description:
+          type: ["string", "null"]
+        status: { type: string, enum: [new, in_progress, delivered, completed, cancelled] }
+        deadline:
+          type: ["string", "null"]
+          format: date
+        deliverableUrl:
+          type: ["string", "null"]
+        clientPaymentReceived: { type: boolean }
+        clientPaymentAmount:
+          type: ["number", "null"]
+        createdAt: { type: string, format: date-time }
+    ProjectInput:
+      type: object
+      required: [clientName, clientEmail, serviceCategory, title]
+      properties:
+        clientName: { type: string, minLength: 1 }
+        clientEmail: { type: string }
+        clientPhone: { type: string }
+        serviceCategory:
+          $ref: "#/components/schemas/ServiceCategory"
+        title: { type: string, minLength: 1 }
+        description: { type: string }
+        deadline: { type: string, format: date }
+    ProjectUpdate:
+      type: object
+      properties:
+        title: { type: string, minLength: 1 }
+        description: { type: string }
+        status: { type: string, enum: [new, in_progress, delivered, completed, cancelled] }
+        deadline: { type: string, format: date }
+        deliverableUrl: { type: string }
+        clientPaymentReceived: { type: boolean }
+        clientPaymentAmount: { type: number }
+
+    ConvertInquiryInput:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, minLength: 1 }
+        description: { type: string }
+        deadline: { type: string, format: date }
+
+    AssignmentInput:
+      type: object
+      required: [employeeId]
+      properties:
+        employeeId: { type: integer }
+
+    EmployeeAssignment:
+      type: object
+      required: [id, projectId, employeeId, status, assignedAt, project]
+      properties:
+        id: { type: integer }
+        projectId: { type: integer }
+        employeeId: { type: integer }
+        status: { type: string, enum: [assigned, in_progress, submitted, approved] }
+        assignedAt: { type: string, format: date-time }
+        project:
+          $ref: "#/components/schemas/Project"
+    EmployeeAssignmentUpdate:
+      type: object
+      properties:
+        status: { type: string, enum: [assigned, in_progress, submitted, approved] }
+        deliverableUrl: { type: string }
+
+    Payment:
+      type: object
+      required: [id, projectId, employeeId, amount, method, status, createdAt]
+      properties:
+        id: { type: integer }
+        projectId: { type: integer }
+        employeeId: { type: integer }
+        amount: { type: number }
+        method:
+          $ref: "#/components/schemas/PayoutMethod"
+        status: { type: string, enum: [pending, paid] }
+        paidAt:
+          type: ["string", "null"]
+          format: date-time
+        referenceNote:
+          type: ["string", "null"]
+        createdAt: { type: string, format: date-time }
+        project:
+          $ref: "#/components/schemas/Project"
+    PaymentInput:
+      type: object
+      required: [projectId, employeeId, amount, method]
+      properties:
+        projectId: { type: integer }
+        employeeId: { type: integer }
+        amount: { type: number }
+        method:
+          $ref: "#/components/schemas/PayoutMethod"
+        referenceNote: { type: string }
+    PaymentUpdate:
+      type: object
+      properties:
+        status: { type: string, enum: [pending, paid] }
+        amount: { type: number }
+        method:
+          $ref: "#/components/schemas/PayoutMethod"
+        referenceNote: { type: string }
+
+    AuditLog:
+      type: object
+      required: [id, actorId, action, createdAt]
+      properties:
+        id: { type: integer }
+        actorId: { type: string }
+        action: { type: string }
+        metadata:
+          type: ["object", "null"]
+          additionalProperties: true
+        createdAt: { type: string, format: date-time }
+
+    AdminDashboard:
+      type: object
+      required:
+        - newApplicants
+        - interviewsThisWeek
+        - activeProjects
+        - pendingPayouts
+        - newInquiries
+        - upcomingConsultations
+        - applicantsByStatus
+        - projectsByStatus
+      properties:
+        newApplicants: { type: integer }
+        interviewsThisWeek: { type: integer }
+        activeProjects: { type: integer }
+        pendingPayouts: { type: integer }
+        newInquiries: { type: integer }
+        upcomingConsultations: { type: integer }
+        applicantsByStatus:
+          type: object
+          additionalProperties:
+            type: integer
+        projectsByStatus:
+          type: object
+          additionalProperties:
+            type: integer

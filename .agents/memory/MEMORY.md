@@ -1,0 +1,6 @@
+- [Zod v3 vs v4 OpenAPI codegen](zod-email-format.md) — never use `format: email` in openapi.yaml; zod v3.x breaks on generated `z.email()`
+- [OpenAPI spec frozen after codegen](openapi-spec-frozen.md) — once design subagent runs against generated hooks, freeze spec and reshape DB schema to match, not vice versa
+- [DB push non-interactive fix](db-push-noninteractive.md) — drizzle-kit push prompts on column conflicts; drop tables via SQL first, then push clean
+- [api-client-react subpath exports](api-client-react-subpaths.md) — must add explicit exports entries for deep imports like `./api.schemas`
+- [ApiError shape](api-error-shape.md) — error body is at `err.data`, not `err.error`; use `(err.data as any)?.message || err.message`
+- [Admin seed credentials](admin-seed.md) — default admin is `admin@craftloop.app` / `Craftloop!Admin1`; seeded via `pnpm exec tsx src/scripts/seed.ts`
