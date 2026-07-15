@@ -3,6 +3,7 @@ export * from "./users";
 export * from "./services";
 export * from "./portfolioItems";
 export * from "./testimonials";
+export * from "./faqs";
 export * from "./slots";
 export * from "./applicants";
 export * from "./employees";
