@@ -17,7 +17,7 @@ import { requireRole, requireEmployeeId } from "../lib/auth";
 
 const router: IRouter = Router();
 
-router.use(requireRole("EMPLOYEE"));
+router.use("/employee", requireRole("EMPLOYEE"));
 
 router.get("/employee/assignments", async (req, res) => {
   const employeeId = requireEmployeeId(req);

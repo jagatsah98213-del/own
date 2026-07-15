@@ -8,11 +8,13 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const { data: user, isLoading } = useGetCurrentUser();
   const logout = useLogout();
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -23,6 +25,15 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
   if (isLoading) return <div className="min-h-screen bg-background" />;
   if (!user || user.role !== "ADMIN") return null;
+
+  const handleLogout = () => {
+    logout.mutate(undefined, {
+      onSuccess: () => {
+        queryClient.clear();
+        setLocation("/admin/login");
+      }
+    });
+  };
 
   const navItems = [
     { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
@@ -39,7 +50,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const SidebarContent = () => (
     <>
       <div className="h-16 flex items-center px-6 border-b border-border">
-        <span className="font-extrabold text-xl tracking-tighter">Craftloop<span className="text-primary">.Admin</span></span>
+        <span className="font-extrabold text-xl tracking-tighter">Trivinex<span className="text-primary">.Admin</span></span>
       </div>
       <nav className="flex-1 overflow-y-auto p-4 space-y-1">
         {navItems.map(item => {
@@ -59,9 +70,14 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         })}
       </nav>
       <div className="p-4 border-t border-border mt-auto">
-        <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 font-semibold" onClick={() => logout.mutate(undefined, { onSuccess: () => setLocation("/admin/login") })}>
+        <Button
+          variant="ghost"
+          className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 font-semibold"
+          onClick={handleLogout}
+          disabled={logout.isPending}
+        >
           <LogOut className="w-4 h-4 mr-2" />
-          Logout
+          {logout.isPending ? "Logging out…" : "Logout"}
         </Button>
       </div>
     </>
@@ -74,7 +90,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       </aside>
       <main className="flex-1 flex flex-col min-w-0">
         <header className="h-16 border-b border-border/50 bg-card/50 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-10 lg:hidden">
-          <span className="font-extrabold text-lg">Craftloop.Admin</span>
+          <span className="font-extrabold text-lg">Trivinex.Admin</span>
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon"><Menu className="w-5 h-5" /></Button>

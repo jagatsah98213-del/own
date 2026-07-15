@@ -105,7 +105,7 @@ import { recordAuditLog } from "../lib/auditLog";
 
 const router: IRouter = Router();
 
-router.use(requireRole("ADMIN"));
+router.use("/admin", requireRole("ADMIN"));
 
 function generateTempPassword(): string {
   return crypto.randomBytes(9).toString("base64url");
