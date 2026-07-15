@@ -16,6 +16,7 @@ import Quote from '@/pages/public/Quote';
 import Consultation from '@/pages/public/Consultation';
 import Testimonials from '@/pages/public/Testimonials';
 import Careers from '@/pages/public/Careers';
+import Freelancers from '@/pages/public/Freelancers';
 
 import Login from '@/pages/auth/Login';
 
@@ -48,6 +49,7 @@ function Router() {
       <Route path="/consultation" component={() => <PublicLayout><Consultation /></PublicLayout>} />
       <Route path="/testimonials" component={() => <PublicLayout><Testimonials /></PublicLayout>} />
       <Route path="/careers" component={() => <PublicLayout><Careers /></PublicLayout>} />
+      <Route path="/freelancers" component={() => <PublicLayout><Freelancers /></PublicLayout>} />
       
       <Route path="/admin/login" component={() => <Login type="admin" />} />
       <Route path="/employee/login" component={() => <Login type="employee" />} />
