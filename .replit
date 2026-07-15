@@ -1,5 +1,13 @@
 modules = ["nodejs-20", "web", "bash", "postgresql-16"]
 
+[[ports]]
+localPort = 5173
+externalPort = 80
+
+[[ports]]
+localPort = 8080
+externalPort = 3000
+
 [deployment]
 router = "application"
 deploymentTarget = "autoscale"
@@ -45,8 +53,8 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "PORT=22477 BASE_PATH=/ pnpm --filter @workspace/craftloop run dev"
-waitForPort = 22477
+args = "PORT=5173 BASE_PATH=/ pnpm --filter @workspace/craftloop run dev"
+waitForPort = 5173
 
 [agent]
 stack = "PNPM_WORKSPACE"
