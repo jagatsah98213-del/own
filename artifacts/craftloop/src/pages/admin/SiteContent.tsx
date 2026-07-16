@@ -1,5 +1,5 @@
-import { useListAdminServices, useListAdminTestimonials, useUpdateAdminTestimonial, getListAdminTestimonialsQueryKey, useListAdminPortfolioItems, useCreateAdminPortfolioItem, getListAdminPortfolioItemsQueryKey } from "@workspace/api-client-react";
-import { Loader2, ExternalLink, Plus, Check, X, Pencil, Trash2, GripVertical } from "lucide-react";
+import { useListAdminServices, useListAdminTestimonials, useUpdateAdminTestimonial, getListAdminTestimonialsQueryKey, useListAdminPortfolioItems, useCreateAdminPortfolioItem, getListAdminPortfolioItemsQueryKey, getListAdminServicesQueryKey } from "@workspace/api-client-react";
+import { Loader2, ExternalLink, Plus, Check, X, Pencil, Trash2, GripVertical, ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -77,6 +77,278 @@ function useDeleteFaq() {
   });
 }
 
+// ─── Service Plan types & hooks ────────────────────────────────────────────────
+interface ServicePlanItem {
+  id: number;
+  serviceId: number;
+  name: string;
+  description: string;
+  pricingType: "ONE_TIME" | "MONTHLY";
+  startingPrice: string | null;
+  badge: "NONE" | "HOT" | "NEW" | "POPULAR" | "BEST_VALUE";
+  isActive: boolean;
+  sortOrder: number;
+}
+
+const planSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  description: z.string().min(1, "Description is required"),
+  pricingType: z.enum(["ONE_TIME", "MONTHLY"]),
+  startingPrice: z.string().optional(),
+  badge: z.enum(["NONE", "HOT", "NEW", "POPULAR", "BEST_VALUE"]),
+  isActive: z.boolean(),
+  sortOrder: z.coerce.number().int(),
+});
+
+function useServicePlans(serviceId: number | null) {
+  return useQuery<ServicePlanItem[]>({
+    queryKey: ["admin-service-plans", serviceId],
+    queryFn: () => fetch(`/api/admin/service-plans?serviceId=${serviceId}`, { credentials: "include" }).then(r => r.json()),
+    enabled: !!serviceId,
+  });
+}
+
+function useCreateServicePlan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: z.infer<typeof planSchema> & { serviceId: number }) =>
+      fetch("/api/admin/service-plans", {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }).then(r => r.json()),
+    onSuccess: (_data: ServicePlanItem, vars: z.infer<typeof planSchema> & { serviceId: number }) => {
+      qc.invalidateQueries({ queryKey: ["admin-service-plans", vars.serviceId] });
+      qc.invalidateQueries({ queryKey: getListAdminServicesQueryKey() });
+    },
+  });
+}
+
+function useUpdateServicePlan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, serviceId: _sid, data }: { id: number; serviceId: number; data: Partial<z.infer<typeof planSchema>> }) =>
+      fetch(`/api/admin/service-plans/${id}`, {
+        method: "PATCH", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }).then(r => r.json()),
+    onSuccess: (_data: ServicePlanItem, vars: { id: number; serviceId: number; data: Partial<z.infer<typeof planSchema>> }) => {
+      qc.invalidateQueries({ queryKey: ["admin-service-plans", vars.serviceId] });
+      qc.invalidateQueries({ queryKey: getListAdminServicesQueryKey() });
+    },
+  });
+}
+
+function useDeleteServicePlan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id }: { id: number; serviceId: number }) =>
+      fetch(`/api/admin/service-plans/${id}`, { method: "DELETE", credentials: "include" }),
+    onSuccess: (_data: unknown, vars: { id: number; serviceId: number }) => {
+      qc.invalidateQueries({ queryKey: ["admin-service-plans", vars.serviceId] });
+      qc.invalidateQueries({ queryKey: getListAdminServicesQueryKey() });
+    },
+  });
+}
+
+const planBadgeStyles: Record<string, string> = {
+  NONE: "bg-muted text-muted-foreground",
+  HOT: "bg-red-500 text-white border-0",
+  NEW: "bg-blue-500 text-white border-0",
+  POPULAR: "bg-amber-500 text-white border-0",
+  BEST_VALUE: "bg-purple-500 text-white border-0",
+};
+
+function ServicePlansPanel({ serviceId, serviceName }: { serviceId: number; serviceName: string }) {
+  const { toast } = useToast();
+  const { data: plans, isLoading } = useServicePlans(serviceId);
+  const createPlan = useCreateServicePlan();
+  const updatePlan = useUpdateServicePlan();
+  const deletePlan = useDeleteServicePlan();
+
+  const [planDialogOpen, setPlanDialogOpen] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<ServicePlanItem | null>(null);
+  const [deletingPlan, setDeletingPlan] = useState<ServicePlanItem | null>(null);
+
+  const planForm = useForm<z.infer<typeof planSchema>>({
+    resolver: zodResolver(planSchema),
+    defaultValues: { name: "", description: "", pricingType: "ONE_TIME", startingPrice: "", badge: "NONE", isActive: true, sortOrder: 1 },
+  });
+
+  const openNewPlan = () => {
+    setEditingPlan(null);
+    planForm.reset({ name: "", description: "", pricingType: "ONE_TIME", startingPrice: "", badge: "NONE", isActive: true, sortOrder: (plans?.length ?? 0) + 1 });
+    setPlanDialogOpen(true);
+  };
+
+  const openEditPlan = (plan: ServicePlanItem) => {
+    setEditingPlan(plan);
+    planForm.reset({ name: plan.name, description: plan.description, pricingType: plan.pricingType, startingPrice: plan.startingPrice ?? "", badge: plan.badge, isActive: plan.isActive, sortOrder: plan.sortOrder });
+    setPlanDialogOpen(true);
+  };
+
+  const handlePlanSubmit = (values: z.infer<typeof planSchema>) => {
+    if (editingPlan) {
+      updatePlan.mutate({ id: editingPlan.id, serviceId, data: values }, {
+        onSuccess: () => { setPlanDialogOpen(false); toast({ title: "Plan updated" }); },
+        onError: (err: any) => toast({ variant: "destructive", title: "Error", description: err?.data?.message || err?.message }),
+      });
+    } else {
+      createPlan.mutate({ ...values, serviceId }, {
+        onSuccess: () => { setPlanDialogOpen(false); planForm.reset(); toast({ title: "Plan added" }); },
+        onError: (err: any) => toast({ variant: "destructive", title: "Error", description: err?.data?.message || err?.message }),
+      });
+    }
+  };
+
+  const handleDeletePlan = () => {
+    if (!deletingPlan) return;
+    deletePlan.mutate({ id: deletingPlan.id, serviceId }, {
+      onSuccess: () => { setDeletingPlan(null); toast({ title: "Plan deleted" }); },
+    });
+  };
+
+  return (
+    <CardContent className="p-0">
+      <div className="flex justify-end px-4 py-3 border-b border-border/50 bg-background">
+        <Button size="sm" onClick={openNewPlan}><Plus className="w-4 h-4 mr-2" /> Add Plan</Button>
+      </div>
+      {isLoading ? (
+        <div className="flex justify-center p-6"><Loader2 className="w-6 h-6 animate-spin" /></div>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="font-bold">Name</TableHead>
+              <TableHead className="font-bold">Type</TableHead>
+              <TableHead className="font-bold">Price</TableHead>
+              <TableHead className="font-bold">Badge</TableHead>
+              <TableHead className="font-bold">Status</TableHead>
+              <TableHead className="font-bold w-12">Sort</TableHead>
+              <TableHead className="text-right font-bold">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {plans?.map(plan => (
+              <TableRow key={plan.id}>
+                <TableCell>
+                  <div className="font-semibold">{plan.name}</div>
+                  <div className="text-xs text-muted-foreground max-w-xs truncate">{plan.description}</div>
+                </TableCell>
+                <TableCell><Badge variant="outline" className="text-xs">{plan.pricingType === "MONTHLY" ? "Monthly" : "One-time"}</Badge></TableCell>
+                <TableCell className="text-sm">{plan.startingPrice || "—"}</TableCell>
+                <TableCell><Badge className={`text-xs ${planBadgeStyles[plan.badge]}`}>{plan.badge}</Badge></TableCell>
+                <TableCell>
+                  <Badge className={plan.isActive ? "bg-green-500 hover:bg-green-600" : "bg-muted text-muted-foreground hover:bg-muted"}>
+                    {plan.isActive ? "Active" : "Hidden"}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">{plan.sortOrder}</TableCell>
+                <TableCell className="text-right">
+                  <Button variant="ghost" size="sm" onClick={() => openEditPlan(plan)}><Pencil className="w-3.5 h-3.5" /></Button>
+                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeletingPlan(plan)}>
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+            {plans?.length === 0 && (
+              <TableRow><TableCell colSpan={7} className="text-center py-6 text-muted-foreground text-sm">No plans yet. Add the first plan for {serviceName}.</TableCell></TableRow>
+            )}
+          </TableBody>
+        </Table>
+      )}
+
+      {/* Add/Edit Plan Dialog */}
+      <Dialog open={planDialogOpen} onOpenChange={setPlanDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>{editingPlan ? "Edit Plan" : "Add Plan"} — {serviceName}</DialogTitle></DialogHeader>
+          <Form {...planForm}>
+            <form onSubmit={planForm.handleSubmit(handlePlanSubmit)} className="space-y-4 mt-2">
+              <FormField control={planForm.control} name="name" render={({ field }) => (
+                <FormItem><FormLabel>Plan Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={planForm.control} name="description" render={({ field }) => (
+                <FormItem><FormLabel>Description</FormLabel><FormControl><Textarea className="min-h-[80px] resize-y" {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField control={planForm.control} name="pricingType" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Pricing Type</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        <SelectItem value="ONE_TIME">One-time</SelectItem>
+                        <SelectItem value="MONTHLY">Monthly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={planForm.control} name="badge" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Badge</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        <SelectItem value="NONE">None</SelectItem>
+                        <SelectItem value="HOT">🔥 Hot</SelectItem>
+                        <SelectItem value="NEW">✨ New</SelectItem>
+                        <SelectItem value="POPULAR">⭐ Popular</SelectItem>
+                        <SelectItem value="BEST_VALUE">💎 Best Value</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField control={planForm.control} name="startingPrice" render={({ field }) => (
+                  <FormItem><FormLabel>Starting Price (Optional)</FormLabel><FormControl><Input placeholder="e.g. Starting at $299" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField control={planForm.control} name="sortOrder" render={({ field }) => (
+                  <FormItem><FormLabel>Sort Order</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} /></FormControl><FormMessage /></FormItem>
+                )} />
+              </div>
+              <FormField control={planForm.control} name="isActive" render={({ field }) => (
+                <FormItem className="flex items-center gap-3 py-1">
+                  <FormControl>
+                    <input type="checkbox" checked={field.value} onChange={e => field.onChange(e.target.checked)} className="w-4 h-4 accent-primary cursor-pointer" />
+                  </FormControl>
+                  <FormLabel className="!mt-0 cursor-pointer">Active (visible to clients on the Services page)</FormLabel>
+                </FormItem>
+              )} />
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setPlanDialogOpen(false)}>Cancel</Button>
+                <Button type="submit" disabled={createPlan.isPending || updatePlan.isPending}>
+                  {(createPlan.isPending || updatePlan.isPending) && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                  {editingPlan ? "Save Changes" : "Add Plan"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirm Dialog */}
+      <Dialog open={!!deletingPlan} onOpenChange={open => !open && setDeletingPlan(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Delete "{deletingPlan?.name}"?</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">This will permanently remove this plan. Existing inquiry references will lose the plan link.</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletingPlan(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDeletePlan} disabled={deletePlan.isPending}>
+              {deletePlan.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </CardContent>
+  );
+}
+
 export default function SiteContent() {
   const { data: services, isLoading: loadingServices } = useListAdminServices();
   const { data: testimonials, isLoading: loadingTestimonials } = useListAdminTestimonials();
@@ -103,6 +375,7 @@ export default function SiteContent() {
   const [faqDialogOpen, setFaqDialogOpen] = useState(false);
   const [editingFaq, setEditingFaq] = useState<Faq | null>(null);
   const [deletingFaqId, setDeletingFaqId] = useState<number | null>(null);
+  const [expandedServiceId, setExpandedServiceId] = useState<number | null>(null);
 
   const faqForm = useForm<z.infer<typeof faqSchema>>({
     resolver: zodResolver(faqSchema),
@@ -209,6 +482,42 @@ export default function SiteContent() {
             </Table>
           )}
         </Card>
+      </section>
+
+      {/* ── Service Plans ── */}
+      <section>
+        <div className="mb-6">
+          <h2 className="text-xl font-bold">Service Plans</h2>
+          <p className="text-muted-foreground text-sm mt-1">Manage the pricing plans shown on the Services page and the Quote form for each service.</p>
+        </div>
+        <div className="space-y-3">
+          {loadingServices ? (
+            <div className="flex justify-center p-8"><Loader2 className="w-6 h-6 animate-spin" /></div>
+          ) : (
+            services?.map(service => {
+              const isExpanded = expandedServiceId === service.id;
+              return (
+                <Card key={service.id} className="shadow-sm overflow-hidden">
+                  <div
+                    className="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-muted/20 transition-colors"
+                    onClick={() => setExpandedServiceId(isExpanded ? null : service.id)}
+                  >
+                    <div>
+                      <div className="font-bold">{service.title}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {service.plans?.length ?? 0} plan{(service.plans?.length ?? 0) !== 1 ? "s" : ""} · {service.category.replace(/_/g, " ")}
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="sm" className="pointer-events-none">
+                      {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                  {isExpanded && <ServicePlansPanel serviceId={service.id} serviceName={service.title} />}
+                </Card>
+              );
+            })
+          )}
+        </div>
       </section>
 
       {/* ── Portfolio ── */}

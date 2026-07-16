@@ -6,3 +6,4 @@
 - [Admin seed credentials](admin-seed.md) — default admin is `admin@craftloop.app` / `Craftloop!Admin1`; seeded via `pnpm exec tsx src/scripts/seed.ts`
 - [Router middleware scope bug](router-scope-bug.md) — `router.use(requireRole(...))` with no path in a sub-router intercepts ALL requests; always scope to the path prefix e.g. `router.use("/admin", requireRole("ADMIN"))`
 - [Public site design system](public-design.md) — Apple-premium dark hero (#06060A) + white content sections; framer-motion for scroll animations; hardcoded Apple colors (not CSS vars) so admin portal is unaffected
+- [Service Sub-Plans feature](service-plans-feature.md) — service_plans table, nested plans in Service API, quote form plan picker, admin SiteContent CRUD panel

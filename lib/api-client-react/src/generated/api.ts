@@ -44,6 +44,7 @@ import type {
   InterviewBookingInput,
   ListAdminApplicantsParams,
   ListAdminAuditLogsParams,
+  ListAdminServicePlansParams,
   ListPublicInterviewSlotsParams,
   ListPublicPortfolioItemsParams,
   MeetingBooking,
@@ -63,6 +64,9 @@ import type {
   ProjectUpdate,
   Service,
   ServiceInput,
+  ServicePlan,
+  ServicePlanInput,
+  ServicePlanUpdate,
   ServiceUpdate,
   Slot,
   SlotInput,
@@ -461,6 +465,83 @@ export function useListPublicServices<TData = Awaited<ReturnType<typeof listPubl
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getListPublicServicesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListPublicServicePlansUrl = (slug: string,) => {
+
+
+
+
+  return `/api/public/services/${slug}/plans`
+}
+
+/**
+ * @summary List active plans for a service
+ */
+export const listPublicServicePlans = async (slug: string, options?: RequestInit): Promise<ServicePlan[]> => {
+
+  return customFetch<ServicePlan[]>(getListPublicServicePlansUrl(slug),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPublicServicePlansQueryKey = (slug: string,) => {
+    return [
+    `/api/public/services/${slug}/plans`
+    ] as const;
+    }
+
+
+export const getListPublicServicePlansQueryOptions = <TData = Awaited<ReturnType<typeof listPublicServicePlans>>, TError = ErrorType<ErrorResponse>>(slug: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPublicServicePlans>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPublicServicePlansQueryKey(slug);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPublicServicePlans>>> = ({ signal }) => listPublicServicePlans(slug, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: slug !== null && slug !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPublicServicePlans>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListPublicServicePlansQueryResult = NonNullable<Awaited<ReturnType<typeof listPublicServicePlans>>>
+export type ListPublicServicePlansQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary List active plans for a service
+ */
+
+export function useListPublicServicePlans<TData = Awaited<ReturnType<typeof listPublicServicePlans>>, TError = ErrorType<ErrorResponse>>(
+ slug: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPublicServicePlans>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListPublicServicePlansQueryOptions(slug,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -3807,6 +3888,304 @@ export const useDeleteAdminService = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteAdminServiceMutationOptions(options));
+    }
+
+export const getListAdminServicePlansUrl = (params: ListAdminServicePlansParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/service-plans?${stringifiedParams}` : `/api/admin/service-plans`
+}
+
+/**
+ * @summary List plans for a service
+ */
+export const listAdminServicePlans = async (params: ListAdminServicePlansParams, options?: RequestInit): Promise<ServicePlan[]> => {
+
+  return customFetch<ServicePlan[]>(getListAdminServicePlansUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAdminServicePlansQueryKey = (params?: ListAdminServicePlansParams,) => {
+    return [
+    `/api/admin/service-plans`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListAdminServicePlansQueryOptions = <TData = Awaited<ReturnType<typeof listAdminServicePlans>>, TError = ErrorType<unknown>>(params: ListAdminServicePlansParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminServicePlans>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAdminServicePlansQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminServicePlans>>> = ({ signal }) => listAdminServicePlans(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAdminServicePlans>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAdminServicePlansQueryResult = NonNullable<Awaited<ReturnType<typeof listAdminServicePlans>>>
+export type ListAdminServicePlansQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List plans for a service
+ */
+
+export function useListAdminServicePlans<TData = Awaited<ReturnType<typeof listAdminServicePlans>>, TError = ErrorType<unknown>>(
+ params: ListAdminServicePlansParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminServicePlans>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAdminServicePlansQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateAdminServicePlanUrl = () => {
+
+
+
+
+  return `/api/admin/service-plans`
+}
+
+/**
+ * @summary Create a service plan
+ */
+export const createAdminServicePlan = async (servicePlanInput: ServicePlanInput, options?: RequestInit): Promise<ServicePlan> => {
+
+  return customFetch<ServicePlan>(getCreateAdminServicePlanUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(servicePlanInput)
+  }
+);}
+
+
+
+
+
+export const getCreateAdminServicePlanMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAdminServicePlan>>, TError,{data: BodyType<ServicePlanInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAdminServicePlan>>, TError,{data: BodyType<ServicePlanInput>}, TContext> => {
+
+const mutationKey = ['createAdminServicePlan'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAdminServicePlan>>, {data: BodyType<ServicePlanInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createAdminServicePlan(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateAdminServicePlanMutationResult = NonNullable<Awaited<ReturnType<typeof createAdminServicePlan>>>
+    export type CreateAdminServicePlanMutationBody = BodyType<ServicePlanInput>
+    export type CreateAdminServicePlanMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a service plan
+ */
+export const useCreateAdminServicePlan = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAdminServicePlan>>, TError,{data: BodyType<ServicePlanInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createAdminServicePlan>>,
+        TError,
+        {data: BodyType<ServicePlanInput>},
+        TContext
+      > => {
+      return useMutation(getCreateAdminServicePlanMutationOptions(options));
+    }
+
+export const getUpdateAdminServicePlanUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/service-plans/${id}`
+}
+
+/**
+ * @summary Update a service plan
+ */
+export const updateAdminServicePlan = async (id: number,
+    servicePlanUpdate: ServicePlanUpdate, options?: RequestInit): Promise<ServicePlan> => {
+
+  return customFetch<ServicePlan>(getUpdateAdminServicePlanUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(servicePlanUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateAdminServicePlanMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdminServicePlan>>, TError,{id: number;data: BodyType<ServicePlanUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAdminServicePlan>>, TError,{id: number;data: BodyType<ServicePlanUpdate>}, TContext> => {
+
+const mutationKey = ['updateAdminServicePlan'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAdminServicePlan>>, {id: number;data: BodyType<ServicePlanUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateAdminServicePlan(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAdminServicePlanMutationResult = NonNullable<Awaited<ReturnType<typeof updateAdminServicePlan>>>
+    export type UpdateAdminServicePlanMutationBody = BodyType<ServicePlanUpdate>
+    export type UpdateAdminServicePlanMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Update a service plan
+ */
+export const useUpdateAdminServicePlan = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdminServicePlan>>, TError,{id: number;data: BodyType<ServicePlanUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateAdminServicePlan>>,
+        TError,
+        {id: number;data: BodyType<ServicePlanUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateAdminServicePlanMutationOptions(options));
+    }
+
+export const getDeleteAdminServicePlanUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/service-plans/${id}`
+}
+
+/**
+ * @summary Delete a service plan
+ */
+export const deleteAdminServicePlan = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteAdminServicePlanUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteAdminServicePlanMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAdminServicePlan>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAdminServicePlan>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteAdminServicePlan'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAdminServicePlan>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteAdminServicePlan(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAdminServicePlanMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAdminServicePlan>>>
+
+    export type DeleteAdminServicePlanMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a service plan
+ */
+export const useDeleteAdminServicePlan = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAdminServicePlan>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAdminServicePlan>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteAdminServicePlanMutationOptions(options));
     }
 
 export const getListAdminPortfolioItemsUrl = () => {

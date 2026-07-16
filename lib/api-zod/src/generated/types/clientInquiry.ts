@@ -21,4 +21,6 @@ export interface ClientInquiry {
   timeline?: string | null;
   status: ClientInquiryStatus;
   createdAt: Date;
+  /** @nullable */
+  servicePlanId?: number | null;
 }

@@ -73,3 +73,16 @@ export const portfolioMediaTypeEnum = pgEnum("portfolio_media_type", [
   "video",
   "link",
 ]);
+
+export const planBadgeEnum = pgEnum("plan_badge", [
+  "NONE",
+  "HOT",
+  "NEW",
+  "POPULAR",
+  "BEST_VALUE",
+]);
+
+export const pricingTypeEnum = pgEnum("pricing_type", [
+  "ONE_TIME",
+  "MONTHLY",
+]);

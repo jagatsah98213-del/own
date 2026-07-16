@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ServiceCategory } from './serviceCategory';
+import type { ServicePlan } from './servicePlan';
 
 export interface Service {
   id: number;
@@ -19,4 +20,5 @@ export interface Service {
   startingPrice?: string | null;
   isActive: boolean;
   sortOrder: number;
+  plans?: ServicePlan[];
 }

@@ -1,32 +1,44 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useLocation } from "wouter";
-import { useCreateInquiry } from "@workspace/api-client-react";
+import { useListPublicServices, useCreateInquiry } from "@workspace/api-client-react";
 import { ServiceCategory } from "@workspace/api-client-react/api.schemas";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
+
+const badgeConfig: Record<string, { label: string; className: string }> = {
+  HOT: { label: "🔥 Hot", className: "bg-red-500 text-white border-0" },
+  NEW: { label: "✨ New", className: "bg-blue-500 text-white border-0" },
+  POPULAR: { label: "⭐ Popular", className: "bg-amber-500 text-white border-0" },
+  BEST_VALUE: { label: "💎 Best Value", className: "bg-purple-500 text-white border-0" },
+};
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is required"),
   email: z.string().email("Valid email is required"),
   phone: z.string().min(5, "Phone number is required"),
   serviceNeeded: z.nativeEnum(ServiceCategory, { required_error: "Please select a service" }),
+  servicePlanId: z.number().optional(),
   projectDetails: z.string().min(20, "Please provide some details about your project"),
   budgetRange: z.string().optional(),
   timeline: z.string().optional(),
 });
 
 export default function Quote() {
-  const initialService = new URLSearchParams(window.location.search).get("service") as ServiceCategory | null;
+  const searchParams = new URLSearchParams(window.location.search);
+  const initialService = searchParams.get("service") as ServiceCategory | null;
+  const initialPlanId = searchParams.get("plan") ? Number(searchParams.get("plan")) : undefined;
+
   const { toast } = useToast();
   const createInquiry = useCreateInquiry();
+  const { data: services } = useListPublicServices();
   const [submitted, setSubmitted] = useState(false);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -37,11 +49,16 @@ export default function Quote() {
       email: "",
       phone: "",
       serviceNeeded: Object.values(ServiceCategory).includes(initialService as any) ? (initialService ?? undefined) : undefined,
+      servicePlanId: initialPlanId,
       projectDetails: "",
       budgetRange: "",
       timeline: "",
     }
   });
+
+  const watchedService = form.watch("serviceNeeded");
+  const selectedService = services?.find(s => s.category === watchedService);
+  const availablePlans = selectedService?.plans?.filter(p => p.isActive) ?? [];
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     createInquiry.mutate({ data: values }, {
@@ -112,7 +129,7 @@ export default function Quote() {
                   <FormField control={form.control} name="serviceNeeded" render={({ field }) => (
                     <FormItem>
                       <FormLabel className="font-semibold">Service Needed *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={(v) => { field.onChange(v); form.setValue("servicePlanId", undefined); }} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger className="h-12 rounded-xl">
                             <SelectValue placeholder="Select a service" />
@@ -131,6 +148,40 @@ export default function Quote() {
                     </FormItem>
                   )} />
                 </div>
+
+                {availablePlans.length > 0 && (
+                  <FormField control={form.control} name="servicePlanId" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold">Specific Plan (Optional)</FormLabel>
+                      <Select
+                        onValueChange={(v) => field.onChange(v === "none" ? undefined : Number(v))}
+                        value={field.value !== undefined ? String(field.value) : "none"}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="h-12 rounded-xl">
+                            <SelectValue placeholder="Not sure — general inquiry" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">Not sure — general inquiry</SelectItem>
+                          {availablePlans.map((plan) => {
+                            const badge = plan.badge !== "NONE" ? badgeConfig[plan.badge] : null;
+                            return (
+                              <SelectItem key={plan.id} value={String(plan.id)}>
+                                <div className="flex items-center gap-2">
+                                  <span>{plan.name}</span>
+                                  {badge && <Badge className={`text-xs px-1.5 py-0 h-4 ${badge.className}`}>{badge.label}</Badge>}
+                                  {plan.startingPrice && <span className="text-muted-foreground text-xs">— {plan.startingPrice}</span>}
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                )}
 
                 <FormField control={form.control} name="projectDetails" render={({ field }) => (
                   <FormItem>

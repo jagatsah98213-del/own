@@ -13,5 +13,4 @@ export const PayoutMethod = {
   BANK_TRANSFER: 'BANK_TRANSFER',
   PHONEPE: 'PHONEPE',
   PAYPAL: 'PAYPAL',
-  ESEWA: 'ESEWA',
 } as const;

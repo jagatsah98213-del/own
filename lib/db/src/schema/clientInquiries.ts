@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { serviceCategoryEnum, inquiryStatusEnum } from "./enums";
@@ -12,6 +12,7 @@ export const clientInquiriesTable = pgTable("client_inquiries", {
   projectDetails: text("project_details").notNull(),
   budgetRange: text("budget_range"),
   timeline: text("timeline"),
+  servicePlanId: integer("service_plan_id"),
   status: inquiryStatusEnum("status").notNull().default("new"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

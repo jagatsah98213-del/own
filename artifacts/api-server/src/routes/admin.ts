@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
-import { and, desc, eq, gte, ilike, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, inArray, or, sql } from "drizzle-orm";
 import {
   db,
   applicantsTable,
@@ -15,6 +15,7 @@ import {
   projectAssignmentsTable,
   paymentsTable,
   servicesTable,
+  servicePlansTable,
   portfolioItemsTable,
   testimonialsTable,
   faqsTable,
@@ -100,6 +101,13 @@ import {
   DeleteAdminTestimonialParams,
   ListAdminAuditLogsQueryParams,
   ListAdminAuditLogsResponse,
+  ListAdminServicePlansResponse,
+  CreateAdminServicePlanBody,
+  CreateAdminServicePlanResponse,
+  UpdateAdminServicePlanParams,
+  UpdateAdminServicePlanBody,
+  UpdateAdminServicePlanResponse,
+  DeleteAdminServicePlanParams,
 } from "@workspace/api-zod";
 import { requireRole } from "../lib/auth";
 import { recordAuditLog } from "../lib/auditLog";
@@ -557,7 +565,13 @@ router.patch("/admin/payments/:id", async (req, res) => {
 // ---------- Services ----------
 
 router.get("/admin/services", async (_req, res) => {
-  const rows = await db.select().from(servicesTable).orderBy(servicesTable.sortOrder);
+  const serviceRows = await db.select().from(servicesTable).orderBy(servicesTable.sortOrder);
+  const planRows = serviceRows.length > 0
+    ? await db.select().from(servicePlansTable)
+        .where(inArray(servicePlansTable.serviceId, serviceRows.map(s => s.id)))
+        .orderBy(servicePlansTable.sortOrder)
+    : [];
+  const rows = serviceRows.map(s => ({ ...s, plans: planRows.filter(p => p.serviceId === s.id) }));
   res.json(ListAdminServicesResponse.parse(rows));
 });
 
@@ -585,6 +599,49 @@ router.patch("/admin/services/:id", async (req, res) => {
 router.delete("/admin/services/:id", async (req, res) => {
   const params = DeleteAdminServiceParams.parse(req.params);
   await db.delete(servicesTable).where(eq(servicesTable.id, params.id));
+  res.status(204).end();
+});
+
+// ---------- Service Plans ----------
+
+router.get("/admin/service-plans", async (req, res) => {
+  const serviceId = Number(req.query.serviceId);
+  if (!serviceId || isNaN(serviceId)) {
+    res.status(400).json({ message: "serviceId query param required" });
+    return;
+  }
+  const rows = await db
+    .select()
+    .from(servicePlansTable)
+    .where(eq(servicePlansTable.serviceId, serviceId))
+    .orderBy(servicePlansTable.sortOrder, servicePlansTable.id);
+  res.json(ListAdminServicePlansResponse.parse(rows));
+});
+
+router.post("/admin/service-plans", async (req, res) => {
+  const body = CreateAdminServicePlanBody.parse(req.body);
+  const [plan] = await db.insert(servicePlansTable).values(body).returning();
+  res.status(201).json(CreateAdminServicePlanResponse.parse(plan));
+});
+
+router.patch("/admin/service-plans/:id", async (req, res) => {
+  const params = UpdateAdminServicePlanParams.parse(req.params);
+  const body = UpdateAdminServicePlanBody.parse(req.body);
+  const [updated] = await db
+    .update(servicePlansTable)
+    .set(body)
+    .where(eq(servicePlansTable.id, params.id))
+    .returning();
+  if (!updated) {
+    res.status(404).json({ message: "Service plan not found" });
+    return;
+  }
+  res.json(UpdateAdminServicePlanResponse.parse(updated));
+});
+
+router.delete("/admin/service-plans/:id", async (req, res) => {
+  const params = DeleteAdminServicePlanParams.parse(req.params);
+  await db.delete(servicePlansTable).where(eq(servicePlansTable.id, params.id));
   res.status(204).end();
 });
 

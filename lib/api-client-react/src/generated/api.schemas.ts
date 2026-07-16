@@ -40,7 +40,6 @@ export const PayoutMethod = {
   BANK_TRANSFER: 'BANK_TRANSFER',
   PHONEPE: 'PHONEPE',
   PAYPAL: 'PAYPAL',
-  ESEWA: 'ESEWA',
 } as const;
 
 export type SlotPurpose = typeof SlotPurpose[keyof typeof SlotPurpose];
@@ -65,6 +64,38 @@ export interface AuthUser {
   employeeId?: number | null;
 }
 
+export type PricingType = typeof PricingType[keyof typeof PricingType];
+
+
+export const PricingType = {
+  ONE_TIME: 'ONE_TIME',
+  MONTHLY: 'MONTHLY',
+} as const;
+
+export type PlanBadge = typeof PlanBadge[keyof typeof PlanBadge];
+
+
+export const PlanBadge = {
+  NONE: 'NONE',
+  HOT: 'HOT',
+  NEW: 'NEW',
+  POPULAR: 'POPULAR',
+  BEST_VALUE: 'BEST_VALUE',
+} as const;
+
+export interface ServicePlan {
+  id: number;
+  serviceId: number;
+  name: string;
+  description: string;
+  pricingType: PricingType;
+  /** @nullable */
+  startingPrice?: string | null;
+  badge: PlanBadge;
+  isActive: boolean;
+  sortOrder: number;
+}
+
 export interface Service {
   id: number;
   category: ServiceCategory;
@@ -77,6 +108,7 @@ export interface Service {
   startingPrice?: string | null;
   isActive: boolean;
   sortOrder: number;
+  plans?: ServicePlan[];
 }
 
 export interface ServiceInput {
@@ -102,6 +134,31 @@ export interface ServiceUpdate {
   description?: string;
   icon?: string;
   startingPrice?: string;
+  isActive?: boolean;
+  sortOrder?: number;
+}
+
+export interface ServicePlanInput {
+  serviceId: number;
+  /** @minLength 1 */
+  name: string;
+  /** @minLength 1 */
+  description: string;
+  pricingType?: PricingType;
+  startingPrice?: string;
+  badge?: PlanBadge;
+  isActive?: boolean;
+  sortOrder?: number;
+}
+
+export interface ServicePlanUpdate {
+  /** @minLength 1 */
+  name?: string;
+  /** @minLength 1 */
+  description?: string;
+  pricingType?: PricingType;
+  startingPrice?: string;
+  badge?: PlanBadge;
   isActive?: boolean;
   sortOrder?: number;
 }
@@ -229,6 +286,8 @@ export interface ClientInquiry {
   timeline?: string | null;
   status: ClientInquiryStatus;
   createdAt: string;
+  /** @nullable */
+  servicePlanId?: number | null;
 }
 
 export interface ClientInquiryInput {
@@ -242,6 +301,7 @@ export interface ClientInquiryInput {
   projectDetails: string;
   budgetRange?: string;
   timeline?: string;
+  servicePlanId?: number;
 }
 
 export type InquiryUpdateStatus = typeof InquiryUpdateStatus[keyof typeof InquiryUpdateStatus];
@@ -697,6 +757,10 @@ applicantId: number;
 export type ListAdminApplicantsParams = {
 status?: string;
 serviceCategory?: ServiceCategory;
+};
+
+export type ListAdminServicePlansParams = {
+serviceId: number;
 };
 
 export type ListAdminAuditLogsParams = {

@@ -65,9 +65,41 @@ export const ListPublicServicesResponseItem = zod.object({
   "icon": zod.string().nullish(),
   "startingPrice": zod.string().nullish(),
   "isActive": zod.boolean(),
+  "sortOrder": zod.number(),
+  "plans": zod.array(zod.object({
+  "id": zod.number(),
+  "serviceId": zod.number(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "pricingType": zod.enum(['ONE_TIME', 'MONTHLY']),
+  "startingPrice": zod.string().nullish(),
+  "badge": zod.enum(['NONE', 'HOT', 'NEW', 'POPULAR', 'BEST_VALUE']),
+  "isActive": zod.boolean(),
   "sortOrder": zod.number()
+})).optional()
 })
 export const ListPublicServicesResponse = zod.array(ListPublicServicesResponseItem)
+
+
+/**
+ * @summary List active plans for a service
+ */
+export const ListPublicServicePlansParams = zod.object({
+  "slug": zod.coerce.string()
+})
+
+export const ListPublicServicePlansResponseItem = zod.object({
+  "id": zod.number(),
+  "serviceId": zod.number(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "pricingType": zod.enum(['ONE_TIME', 'MONTHLY']),
+  "startingPrice": zod.string().nullish(),
+  "badge": zod.enum(['NONE', 'HOT', 'NEW', 'POPULAR', 'BEST_VALUE']),
+  "isActive": zod.boolean(),
+  "sortOrder": zod.number()
+})
+export const ListPublicServicePlansResponse = zod.array(ListPublicServicePlansResponseItem)
 
 
 /**
@@ -153,7 +185,8 @@ export const CreateInquiryBody = zod.object({
   "serviceNeeded": zod.enum(['WEB_DEVELOPMENT', 'VIDEO_EDITING', 'PHOTOGRAPHY_VIDEOGRAPHY', 'GRAPHIC_DESIGN', 'CONTENT_WRITING', 'SEO_DIGITAL_MARKETING']),
   "projectDetails": zod.string().min(1),
   "budgetRange": zod.string().optional(),
-  "timeline": zod.string().optional()
+  "timeline": zod.string().optional(),
+  "servicePlanId": zod.number().optional()
 })
 
 export const CreateInquiryResponse = zod.object({
@@ -166,7 +199,8 @@ export const CreateInquiryResponse = zod.object({
   "budgetRange": zod.string().nullish(),
   "timeline": zod.string().nullish(),
   "status": zod.enum(['new', 'contacted', 'converted', 'closed']),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "servicePlanId": zod.number().nullish()
 })
 
 
@@ -223,7 +257,7 @@ export const CreateApplicantBody = zod.object({
   "equipmentOwned": zod.string().optional(),
   "availability": zod.string().optional(),
   "expectedRate": zod.string().optional(),
-  "preferredPayout": zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL', 'ESEWA']).optional(),
+  "preferredPayout": zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL']).optional(),
   "coverNote": zod.string().optional(),
   "resumeUrl": zod.string().optional()
 })
@@ -239,7 +273,7 @@ export const CreateApplicantResponse = zod.object({
   "equipmentOwned": zod.string().nullish(),
   "availability": zod.string().nullish(),
   "expectedRate": zod.string().nullish(),
-  "preferredPayout": zod.union([zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL', 'ESEWA']),zod.null()]).optional(),
+  "preferredPayout": zod.union([zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL']),zod.null()]).optional(),
   "coverNote": zod.string().nullish(),
   "resumeUrl": zod.string().nullish(),
   "status": zod.enum(['applied', 'interview_scheduled', 'interviewed', 'selected', 'rejected']),
@@ -336,7 +370,7 @@ export const UpdateEmployeeAssignmentResponse = zod.object({
  */
 export const GetEmployeePayoutSettingsResponse = zod.object({
   "employeeId": zod.number(),
-  "payoutMethod": zod.union([zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL', 'ESEWA']),zod.null()]).optional(),
+  "payoutMethod": zod.union([zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL']),zod.null()]).optional(),
   "payoutDetails": zod.record(zod.string(), zod.unknown()).nullish()
 })
 
@@ -345,13 +379,13 @@ export const GetEmployeePayoutSettingsResponse = zod.object({
  * @summary Update the logged-in employee's payout settings
  */
 export const UpdateEmployeePayoutSettingsBody = zod.object({
-  "payoutMethod": zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL', 'ESEWA']),
+  "payoutMethod": zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL']),
   "payoutDetails": zod.record(zod.string(), zod.unknown())
 })
 
 export const UpdateEmployeePayoutSettingsResponse = zod.object({
   "employeeId": zod.number(),
-  "payoutMethod": zod.union([zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL', 'ESEWA']),zod.null()]).optional(),
+  "payoutMethod": zod.union([zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL']),zod.null()]).optional(),
   "payoutDetails": zod.record(zod.string(), zod.unknown()).nullish()
 })
 
@@ -364,7 +398,7 @@ export const ListEmployeePaymentsResponseItem = zod.object({
   "projectId": zod.number(),
   "employeeId": zod.number(),
   "amount": zod.number(),
-  "method": zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL', 'ESEWA']),
+  "method": zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL']),
   "status": zod.enum(['pending', 'paid']),
   "paidAt": zod.coerce.date().nullish(),
   "referenceNote": zod.string().nullish(),
@@ -439,7 +473,7 @@ export const ListAdminApplicantsResponseItem = zod.object({
   "equipmentOwned": zod.string().nullish(),
   "availability": zod.string().nullish(),
   "expectedRate": zod.string().nullish(),
-  "preferredPayout": zod.union([zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL', 'ESEWA']),zod.null()]).optional(),
+  "preferredPayout": zod.union([zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL']),zod.null()]).optional(),
   "coverNote": zod.string().nullish(),
   "resumeUrl": zod.string().nullish(),
   "status": zod.enum(['applied', 'interview_scheduled', 'interviewed', 'selected', 'rejected']),
@@ -467,7 +501,7 @@ export const GetAdminApplicantResponse = zod.object({
   "equipmentOwned": zod.string().nullish(),
   "availability": zod.string().nullish(),
   "expectedRate": zod.string().nullish(),
-  "preferredPayout": zod.union([zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL', 'ESEWA']),zod.null()]).optional(),
+  "preferredPayout": zod.union([zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL']),zod.null()]).optional(),
   "coverNote": zod.string().nullish(),
   "resumeUrl": zod.string().nullish(),
   "status": zod.enum(['applied', 'interview_scheduled', 'interviewed', 'selected', 'rejected']),
@@ -499,7 +533,7 @@ export const UpdateAdminApplicantResponse = zod.object({
   "equipmentOwned": zod.string().nullish(),
   "availability": zod.string().nullish(),
   "expectedRate": zod.string().nullish(),
-  "preferredPayout": zod.union([zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL', 'ESEWA']),zod.null()]).optional(),
+  "preferredPayout": zod.union([zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL']),zod.null()]).optional(),
   "coverNote": zod.string().nullish(),
   "resumeUrl": zod.string().nullish(),
   "status": zod.enum(['applied', 'interview_scheduled', 'interviewed', 'selected', 'rejected']),
@@ -525,7 +559,7 @@ export const SelectApplicantResponse = zod.object({
   "phone": zod.string(),
   "serviceCategory": zod.enum(['WEB_DEVELOPMENT', 'VIDEO_EDITING', 'PHOTOGRAPHY_VIDEOGRAPHY', 'GRAPHIC_DESIGN', 'CONTENT_WRITING', 'SEO_DIGITAL_MARKETING']),
   "isActive": zod.boolean(),
-  "payoutMethod": zod.union([zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL', 'ESEWA']),zod.null()]).optional(),
+  "payoutMethod": zod.union([zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL']),zod.null()]).optional(),
   "payoutDetails": zod.record(zod.string(), zod.unknown()).nullish(),
   "createdAt": zod.coerce.date()
 }),
@@ -551,7 +585,7 @@ export const RejectApplicantResponse = zod.object({
   "equipmentOwned": zod.string().nullish(),
   "availability": zod.string().nullish(),
   "expectedRate": zod.string().nullish(),
-  "preferredPayout": zod.union([zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL', 'ESEWA']),zod.null()]).optional(),
+  "preferredPayout": zod.union([zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL']),zod.null()]).optional(),
   "coverNote": zod.string().nullish(),
   "resumeUrl": zod.string().nullish(),
   "status": zod.enum(['applied', 'interview_scheduled', 'interviewed', 'selected', 'rejected']),
@@ -769,7 +803,7 @@ export const ListAdminEmployeesResponseItem = zod.object({
   "phone": zod.string(),
   "serviceCategory": zod.enum(['WEB_DEVELOPMENT', 'VIDEO_EDITING', 'PHOTOGRAPHY_VIDEOGRAPHY', 'GRAPHIC_DESIGN', 'CONTENT_WRITING', 'SEO_DIGITAL_MARKETING']),
   "isActive": zod.boolean(),
-  "payoutMethod": zod.union([zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL', 'ESEWA']),zod.null()]).optional(),
+  "payoutMethod": zod.union([zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL']),zod.null()]).optional(),
   "payoutDetails": zod.record(zod.string(), zod.unknown()).nullish(),
   "createdAt": zod.coerce.date()
 })
@@ -788,7 +822,7 @@ export const createAdminEmployeeBodyPasswordMin = 8;
 export const CreateAdminEmployeeBody = zod.object({
   "fullName": zod.string().min(1),
   "email": zod.string(),
-  "phone": zod.string().optional(),
+  "phone": zod.string().min(1),
   "serviceCategory": zod.enum(['WEB_DEVELOPMENT', 'VIDEO_EDITING', 'PHOTOGRAPHY_VIDEOGRAPHY', 'GRAPHIC_DESIGN', 'CONTENT_WRITING', 'SEO_DIGITAL_MARKETING']),
   "password": zod.string().min(createAdminEmployeeBodyPasswordMin)
 })
@@ -803,7 +837,7 @@ export const CreateAdminEmployeeResponse = zod.object({
   "phone": zod.string(),
   "serviceCategory": zod.enum(['WEB_DEVELOPMENT', 'VIDEO_EDITING', 'PHOTOGRAPHY_VIDEOGRAPHY', 'GRAPHIC_DESIGN', 'CONTENT_WRITING', 'SEO_DIGITAL_MARKETING']),
   "isActive": zod.boolean(),
-  "payoutMethod": zod.union([zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL', 'ESEWA']),zod.null()]).optional(),
+  "payoutMethod": zod.union([zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL']),zod.null()]).optional(),
   "payoutDetails": zod.record(zod.string(), zod.unknown()).nullish(),
   "createdAt": zod.coerce.date()
 }),
@@ -838,7 +872,7 @@ export const UpdateAdminEmployeeResponse = zod.object({
   "phone": zod.string(),
   "serviceCategory": zod.enum(['WEB_DEVELOPMENT', 'VIDEO_EDITING', 'PHOTOGRAPHY_VIDEOGRAPHY', 'GRAPHIC_DESIGN', 'CONTENT_WRITING', 'SEO_DIGITAL_MARKETING']),
   "isActive": zod.boolean(),
-  "payoutMethod": zod.union([zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL', 'ESEWA']),zod.null()]).optional(),
+  "payoutMethod": zod.union([zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL']),zod.null()]).optional(),
   "payoutDetails": zod.record(zod.string(), zod.unknown()).nullish(),
   "createdAt": zod.coerce.date()
 })
@@ -857,7 +891,8 @@ export const ListAdminInquiriesResponseItem = zod.object({
   "budgetRange": zod.string().nullish(),
   "timeline": zod.string().nullish(),
   "status": zod.enum(['new', 'contacted', 'converted', 'closed']),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "servicePlanId": zod.number().nullish()
 })
 export const ListAdminInquiriesResponse = zod.array(ListAdminInquiriesResponseItem)
 
@@ -883,7 +918,8 @@ export const UpdateAdminInquiryResponse = zod.object({
   "budgetRange": zod.string().nullish(),
   "timeline": zod.string().nullish(),
   "status": zod.enum(['new', 'contacted', 'converted', 'closed']),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "servicePlanId": zod.number().nullish()
 })
 
 
@@ -1060,7 +1096,7 @@ export const ListAdminPaymentsResponseItem = zod.object({
   "projectId": zod.number(),
   "employeeId": zod.number(),
   "amount": zod.number(),
-  "method": zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL', 'ESEWA']),
+  "method": zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL']),
   "status": zod.enum(['pending', 'paid']),
   "paidAt": zod.coerce.date().nullish(),
   "referenceNote": zod.string().nullish(),
@@ -1092,7 +1128,7 @@ export const CreateAdminPaymentBody = zod.object({
   "projectId": zod.number(),
   "employeeId": zod.number(),
   "amount": zod.number(),
-  "method": zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL', 'ESEWA']),
+  "method": zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL']),
   "referenceNote": zod.string().optional()
 })
 
@@ -1101,7 +1137,7 @@ export const CreateAdminPaymentResponse = zod.object({
   "projectId": zod.number(),
   "employeeId": zod.number(),
   "amount": zod.number(),
-  "method": zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL', 'ESEWA']),
+  "method": zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL']),
   "status": zod.enum(['pending', 'paid']),
   "paidAt": zod.coerce.date().nullish(),
   "referenceNote": zod.string().nullish(),
@@ -1135,7 +1171,7 @@ export const UpdateAdminPaymentParams = zod.object({
 export const UpdateAdminPaymentBody = zod.object({
   "status": zod.enum(['pending', 'paid']).optional(),
   "amount": zod.number().optional(),
-  "method": zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL', 'ESEWA']).optional(),
+  "method": zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL']).optional(),
   "referenceNote": zod.string().optional()
 })
 
@@ -1144,7 +1180,7 @@ export const UpdateAdminPaymentResponse = zod.object({
   "projectId": zod.number(),
   "employeeId": zod.number(),
   "amount": zod.number(),
-  "method": zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL', 'ESEWA']),
+  "method": zod.enum(['BANK_TRANSFER', 'PHONEPE', 'PAYPAL']),
   "status": zod.enum(['pending', 'paid']),
   "paidAt": zod.coerce.date().nullish(),
   "referenceNote": zod.string().nullish(),
@@ -1180,7 +1216,18 @@ export const ListAdminServicesResponseItem = zod.object({
   "icon": zod.string().nullish(),
   "startingPrice": zod.string().nullish(),
   "isActive": zod.boolean(),
+  "sortOrder": zod.number(),
+  "plans": zod.array(zod.object({
+  "id": zod.number(),
+  "serviceId": zod.number(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "pricingType": zod.enum(['ONE_TIME', 'MONTHLY']),
+  "startingPrice": zod.string().nullish(),
+  "badge": zod.enum(['NONE', 'HOT', 'NEW', 'POPULAR', 'BEST_VALUE']),
+  "isActive": zod.boolean(),
   "sortOrder": zod.number()
+})).optional()
 })
 export const ListAdminServicesResponse = zod.array(ListAdminServicesResponseItem)
 
@@ -1213,7 +1260,18 @@ export const CreateAdminServiceResponse = zod.object({
   "icon": zod.string().nullish(),
   "startingPrice": zod.string().nullish(),
   "isActive": zod.boolean(),
+  "sortOrder": zod.number(),
+  "plans": zod.array(zod.object({
+  "id": zod.number(),
+  "serviceId": zod.number(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "pricingType": zod.enum(['ONE_TIME', 'MONTHLY']),
+  "startingPrice": zod.string().nullish(),
+  "badge": zod.enum(['NONE', 'HOT', 'NEW', 'POPULAR', 'BEST_VALUE']),
+  "isActive": zod.boolean(),
   "sortOrder": zod.number()
+})).optional()
 })
 
 
@@ -1248,7 +1306,18 @@ export const UpdateAdminServiceResponse = zod.object({
   "icon": zod.string().nullish(),
   "startingPrice": zod.string().nullish(),
   "isActive": zod.boolean(),
+  "sortOrder": zod.number(),
+  "plans": zod.array(zod.object({
+  "id": zod.number(),
+  "serviceId": zod.number(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "pricingType": zod.enum(['ONE_TIME', 'MONTHLY']),
+  "startingPrice": zod.string().nullish(),
+  "badge": zod.enum(['NONE', 'HOT', 'NEW', 'POPULAR', 'BEST_VALUE']),
+  "isActive": zod.boolean(),
   "sortOrder": zod.number()
+})).optional()
 })
 
 
@@ -1260,6 +1329,102 @@ export const DeleteAdminServiceParams = zod.object({
 })
 
 export const DeleteAdminServiceResponse = zod.void()
+
+
+/**
+ * @summary List plans for a service
+ */
+export const ListAdminServicePlansQueryParams = zod.object({
+  "serviceId": zod.coerce.number()
+})
+
+export const ListAdminServicePlansResponseItem = zod.object({
+  "id": zod.number(),
+  "serviceId": zod.number(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "pricingType": zod.enum(['ONE_TIME', 'MONTHLY']),
+  "startingPrice": zod.string().nullish(),
+  "badge": zod.enum(['NONE', 'HOT', 'NEW', 'POPULAR', 'BEST_VALUE']),
+  "isActive": zod.boolean(),
+  "sortOrder": zod.number()
+})
+export const ListAdminServicePlansResponse = zod.array(ListAdminServicePlansResponseItem)
+
+
+/**
+ * @summary Create a service plan
+ */
+
+
+
+
+export const CreateAdminServicePlanBody = zod.object({
+  "serviceId": zod.number(),
+  "name": zod.string().min(1),
+  "description": zod.string().min(1),
+  "pricingType": zod.enum(['ONE_TIME', 'MONTHLY']).optional(),
+  "startingPrice": zod.string().optional(),
+  "badge": zod.enum(['NONE', 'HOT', 'NEW', 'POPULAR', 'BEST_VALUE']).optional(),
+  "isActive": zod.boolean().optional(),
+  "sortOrder": zod.number().optional()
+})
+
+export const CreateAdminServicePlanResponse = zod.object({
+  "id": zod.number(),
+  "serviceId": zod.number(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "pricingType": zod.enum(['ONE_TIME', 'MONTHLY']),
+  "startingPrice": zod.string().nullish(),
+  "badge": zod.enum(['NONE', 'HOT', 'NEW', 'POPULAR', 'BEST_VALUE']),
+  "isActive": zod.boolean(),
+  "sortOrder": zod.number()
+})
+
+
+/**
+ * @summary Update a service plan
+ */
+export const UpdateAdminServicePlanParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+
+
+export const UpdateAdminServicePlanBody = zod.object({
+  "name": zod.string().min(1).optional(),
+  "description": zod.string().min(1).optional(),
+  "pricingType": zod.enum(['ONE_TIME', 'MONTHLY']).optional(),
+  "startingPrice": zod.string().optional(),
+  "badge": zod.enum(['NONE', 'HOT', 'NEW', 'POPULAR', 'BEST_VALUE']).optional(),
+  "isActive": zod.boolean().optional(),
+  "sortOrder": zod.number().optional()
+})
+
+export const UpdateAdminServicePlanResponse = zod.object({
+  "id": zod.number(),
+  "serviceId": zod.number(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "pricingType": zod.enum(['ONE_TIME', 'MONTHLY']),
+  "startingPrice": zod.string().nullish(),
+  "badge": zod.enum(['NONE', 'HOT', 'NEW', 'POPULAR', 'BEST_VALUE']),
+  "isActive": zod.boolean(),
+  "sortOrder": zod.number()
+})
+
+
+/**
+ * @summary Delete a service plan
+ */
+export const DeleteAdminServicePlanParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteAdminServicePlanResponse = zod.void()
 
 
 /**

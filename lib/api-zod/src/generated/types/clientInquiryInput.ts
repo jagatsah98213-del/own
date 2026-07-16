@@ -18,4 +18,5 @@ export interface ClientInquiryInput {
   projectDetails: string;
   budgetRange?: string;
   timeline?: string;
+  servicePlanId?: number;
 }

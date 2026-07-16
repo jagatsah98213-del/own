@@ -1,8 +1,9 @@
 import { Router, type IRouter } from "express";
-import { and, desc, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import {
   db,
   servicesTable,
+  servicePlansTable,
   portfolioItemsTable,
   testimonialsTable,
   faqsTable,
@@ -14,6 +15,7 @@ import {
 } from "@workspace/db";
 import {
   ListPublicServicesResponse,
+  ListPublicServicePlansResponse,
   ListPublicPortfolioItemsQueryParams,
   ListPublicPortfolioItemsResponse,
   ListPublicTestimonialsResponse,
@@ -33,12 +35,37 @@ import {
 const router: IRouter = Router();
 
 router.get("/public/services", async (_req, res) => {
-  const rows = await db
+  const serviceRows = await db
     .select()
     .from(servicesTable)
     .where(eq(servicesTable.isActive, true))
     .orderBy(servicesTable.sortOrder);
+  const planRows = serviceRows.length > 0
+    ? await db
+        .select()
+        .from(servicePlansTable)
+        .where(and(
+          inArray(servicePlansTable.serviceId, serviceRows.map(s => s.id)),
+          eq(servicePlansTable.isActive, true),
+        ))
+        .orderBy(servicePlansTable.sortOrder)
+    : [];
+  const rows = serviceRows.map(s => ({ ...s, plans: planRows.filter(p => p.serviceId === s.id) }));
   res.json(ListPublicServicesResponse.parse(rows));
+});
+
+router.get("/public/services/:slug/plans", async (req, res) => {
+  const [service] = await db
+    .select()
+    .from(servicesTable)
+    .where(and(eq(servicesTable.slug, req.params.slug), eq(servicesTable.isActive, true)));
+  if (!service) { res.status(404).json({ message: "Service not found" }); return; }
+  const plans = await db
+    .select()
+    .from(servicePlansTable)
+    .where(and(eq(servicePlansTable.serviceId, service.id), eq(servicePlansTable.isActive, true)))
+    .orderBy(servicePlansTable.sortOrder);
+  res.json(ListPublicServicePlansResponse.parse(plans));
 });
 
 router.get(["/public/portfolio-items", "/public/portfolio"], async (req, res) => {
@@ -87,6 +114,7 @@ router.post("/public/inquiries", async (req, res) => {
       projectDetails: body.projectDetails,
       budgetRange: body.budgetRange,
       timeline: body.timeline,
+      servicePlanId: body.servicePlanId,
     })
     .returning();
   res.status(201).json(CreateInquiryResponse.parse(inquiry));

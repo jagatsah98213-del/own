@@ -1,4 +1,4 @@
-import { useListAdminInquiries, useConvertInquiryToProject, getListAdminInquiriesQueryKey, useUpdateAdminInquiry } from "@workspace/api-client-react";
+import { useListAdminInquiries, useListAdminServices, useConvertInquiryToProject, getListAdminInquiriesQueryKey, useUpdateAdminInquiry } from "@workspace/api-client-react";
 import { Loader2, Plus, Eye, CheckCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -28,6 +28,11 @@ export default function Inquiries() {
   const convertToProject = useConvertInquiryToProject();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  const { data: services } = useListAdminServices();
+  const planMap = new Map<number, string>(
+    services?.flatMap(s => s.plans?.map(p => [p.id, p.name] as [number, string]) ?? []) ?? []
+  );
 
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [convertDialogOpen, setConvertDialogOpen] = useState(false);
@@ -160,6 +165,11 @@ export default function Inquiries() {
                 <div>
                   <div className="text-sm font-bold text-muted-foreground mb-1">Service</div>
                   <Badge variant="outline">{inquiry.serviceNeeded.replace(/_/g, " ")}</Badge>
+                  {inquiry.servicePlanId && planMap.get(inquiry.servicePlanId) && (
+                    <div className="text-xs text-muted-foreground mt-1.5 font-medium">
+                      Plan: {planMap.get(inquiry.servicePlanId)}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <div className="text-sm font-bold text-muted-foreground mb-1">Budget / Timeline</div>
