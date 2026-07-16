@@ -17,6 +17,7 @@ import {
   servicesTable,
   portfolioItemsTable,
   testimonialsTable,
+  faqsTable,
   auditLogsTable,
 } from "@workspace/db";
 import {
@@ -652,6 +653,47 @@ router.patch("/admin/testimonials/:id", async (req, res) => {
 router.delete("/admin/testimonials/:id", async (req, res) => {
   const params = DeleteAdminTestimonialParams.parse(req.params);
   await db.delete(testimonialsTable).where(eq(testimonialsTable.id, params.id));
+  res.status(204).end();
+});
+
+// ---------- FAQs ----------
+
+router.get("/admin/faqs", async (_req, res) => {
+  const rows = await db.select().from(faqsTable).orderBy(faqsTable.sortOrder, faqsTable.id);
+  res.json(rows);
+});
+
+router.post("/admin/faqs", async (req, res) => {
+  const { question, answer, sortOrder, isPublished } = req.body;
+  if (!question?.trim() || !answer?.trim()) {
+    res.status(400).json({ message: "Question and answer are required" });
+    return;
+  }
+  const [row] = await db.insert(faqsTable).values({
+    question: question.trim(),
+    answer: answer.trim(),
+    sortOrder: sortOrder ?? 0,
+    isPublished: isPublished ?? true,
+  }).returning();
+  res.status(201).json(row);
+});
+
+router.patch("/admin/faqs/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  const { question, answer, sortOrder, isPublished } = req.body;
+  const updates: Record<string, unknown> = {};
+  if (question !== undefined) updates.question = question.trim();
+  if (answer !== undefined) updates.answer = answer.trim();
+  if (sortOrder !== undefined) updates.sortOrder = sortOrder;
+  if (isPublished !== undefined) updates.isPublished = isPublished;
+  const [row] = await db.update(faqsTable).set(updates).where(eq(faqsTable.id, id)).returning();
+  if (!row) { res.status(404).json({ message: "Not found" }); return; }
+  res.json(row);
+});
+
+router.delete("/admin/faqs/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  await db.delete(faqsTable).where(eq(faqsTable.id, id));
   res.status(204).end();
 });
 

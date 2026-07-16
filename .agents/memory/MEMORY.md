@@ -4,3 +4,5 @@
 - [api-client-react subpath exports](api-client-react-subpaths.md) — must add explicit exports entries for deep imports like `./api.schemas`
 - [ApiError shape](api-error-shape.md) — error body is at `err.data`, not `err.error`; use `(err.data as any)?.message || err.message`
 - [Admin seed credentials](admin-seed.md) — default admin is `admin@craftloop.app` / `Craftloop!Admin1`; seeded via `pnpm exec tsx src/scripts/seed.ts`
+- [Router middleware scope bug](router-scope-bug.md) — `router.use(requireRole(...))` with no path in a sub-router intercepts ALL requests; always scope to the path prefix e.g. `router.use("/admin", requireRole("ADMIN"))`
+- [Public site design system](public-design.md) — Apple-premium dark hero (#06060A) + white content sections; framer-motion for scroll animations; hardcoded Apple colors (not CSS vars) so admin portal is unaffected

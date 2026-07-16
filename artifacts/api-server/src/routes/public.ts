@@ -5,6 +5,7 @@ import {
   servicesTable,
   portfolioItemsTable,
   testimonialsTable,
+  faqsTable,
   slotsTable,
   clientInquiriesTable,
   meetingBookingsTable,
@@ -137,6 +138,15 @@ router.post("/public/applicants", async (req, res) => {
     })
     .returning();
   res.status(201).json(CreateApplicantResponse.parse(applicant));
+});
+
+router.get("/public/faqs", async (_req, res) => {
+  const rows = await db
+    .select()
+    .from(faqsTable)
+    .where(eq(faqsTable.isPublished, true))
+    .orderBy(faqsTable.sortOrder, faqsTable.id);
+  res.json(rows);
 });
 
 router.post("/public/interview-bookings", async (req, res) => {
