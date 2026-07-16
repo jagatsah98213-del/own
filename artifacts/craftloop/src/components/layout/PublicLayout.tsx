@@ -97,11 +97,9 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
           )}
         </AnimatePresence>
       </header>
-
       <main className="flex-1">{children}</main>
-
       {/* ─── Footer ─── */}
-      <footer className="bg-[#F5F5F7] border-t border-[#E8E8ED] py-16 mt-0">
+      <footer className="bg-[#F5F5F7] border-t border-[#E8E8ED] py-16 mt-[10px] mb-[10px] pt-[64px] pb-[64px] rounded-tl-[0px] rounded-tr-[0px] rounded-br-[0px] rounded-bl-[0px]">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             {/* Brand */}

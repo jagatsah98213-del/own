@@ -1,123 +1,258 @@
-import { useListPublicServices } from "@workspace/api-client-react";
-import { Loader2, ArrowRight, ChevronDown, ChevronUp } from "lucide-react";
 import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { motion } from "framer-motion";
+import { useListPublicServices } from "@workspace/api-client-react";
+import { Code, Video, Camera, Palette, PenTool, TrendingUp, ArrowRight, Loader2, Star, Users, Award, Zap } from "lucide-react";
 
-const badgeConfig: Record<string, { label: string; className: string }> = {
-  HOT: { label: "Hot", className: "bg-red-500 hover:bg-red-600 text-white border-0" },
-  NEW: { label: "New", className: "bg-blue-500 hover:bg-blue-600 text-white border-0" },
-  POPULAR: { label: "Popular", className: "bg-amber-500 hover:bg-amber-600 text-white border-0" },
-  BEST_VALUE: { label: "Best Value", className: "bg-purple-500 hover:bg-purple-600 text-white border-0" },
+const SERVICE_META: Record<string, { icon: React.ElementType; gradient: string }> = {
+  WEB_DEVELOPMENT:          { icon: Code,        gradient: "from-blue-500 to-blue-600" },
+  VIDEO_EDITING:            { icon: Video,       gradient: "from-purple-500 to-purple-600" },
+  PHOTOGRAPHY_VIDEOGRAPHY:  { icon: Camera,      gradient: "from-pink-500 to-rose-600" },
+  GRAPHIC_DESIGN:           { icon: Palette,     gradient: "from-orange-500 to-amber-600" },
+  CONTENT_WRITING:          { icon: PenTool,     gradient: "from-green-500 to-emerald-600" },
+  SEO_DIGITAL_MARKETING:    { icon: TrendingUp,  gradient: "from-cyan-500 to-teal-600" },
+};
+
+import React from "react";
+
+const fadeUp = {
+  initial: { opacity: 0, y: 30 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, amount: 0.3 },
+  transition: { duration: 0.6, ease: [0.21, 0.47, 0.32, 0.98] as any },
 };
 
 export default function Services() {
   const { data: services, isLoading } = useListPublicServices();
-  const [expandedId, setExpandedId] = useState<number | null>(null);
 
   return (
-    <div className="animate-in fade-in duration-700">
-      <section className="bg-muted/30 py-24 border-b border-border/50">
-        <div className="container mx-auto px-4 text-center max-w-3xl">
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-6">Our Services</h1>
-          <p className="text-xl text-muted-foreground font-medium leading-relaxed">
-            We provide specialized digital solutions tailored to elevate your brand and drive results.
-          </p>
+    <div className="flex flex-col overflow-hidden">
+
+      {/* ══════════════════════════════════════════════
+           HERO — Dark, premium
+      ══════════════════════════════════════════════ */}
+      <section className="relative min-h-[65vh] flex items-center bg-[#06060A] overflow-hidden">
+        {/* Background orbs */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-full bg-blue-600/10 blur-[120px]" />
+          <div className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-purple-600/10 blur-[120px]" />
+          <div
+            className="absolute inset-0 opacity-[0.025]"
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(255,255,255,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.8) 1px, transparent 1px)",
+              backgroundSize: "64px 64px",
+            }}
+          />
+        </div>
+
+        <div className="container mx-auto px-4 md:px-8 relative z-10 pt-28 pb-24 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 rounded-full bg-white/[0.06] border border-white/[0.12] px-4 py-1.5 text-xs font-semibold text-white/60 mb-8"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+            6 Premium Services
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.1, ease: [0.21, 0.47, 0.32, 0.98] }}
+            className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tighter text-white leading-[1.05] mb-6"
+          >
+            Everything your{" "}
+            <span
+              style={{
+                background: "linear-gradient(135deg, #60A5FA 0%, #A78BFA 50%, #F472B6 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              brand needs.
+            </span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.25 }}
+            className="text-[#8E8E9A] text-lg max-w-xl mx-auto leading-relaxed mb-10"
+          >
+            Six core disciplines, each executed by vetted experts. Tap any service to
+            explore tailored plans built for your goals and budget.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.35 }}
+            className="flex flex-wrap justify-center gap-4"
+          >
+            <Link
+              href="/quote"
+              className="inline-flex h-12 items-center justify-center rounded-full bg-white text-[#06060A] px-8 text-sm font-bold shadow-2xl hover:bg-blue-50 transition-all duration-200 hover:-translate-y-0.5"
+            >
+              Get a Custom Quote
+            </Link>
+            <Link
+              href="/consultation"
+              className="inline-flex h-12 items-center justify-center rounded-full border border-white/20 text-white px-8 text-sm font-semibold hover:bg-white/[0.06] transition-colors duration-200"
+            >
+              Book a Free Call <ArrowRight className="ml-2 w-4 h-4" />
+            </Link>
+          </motion.div>
+
+          {/* Trust row */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.55 }}
+            className="flex items-center justify-center flex-wrap gap-6 pt-10 mt-10 border-t border-white/[0.08]"
+          >
+            {[
+              { icon: Star, label: "4.9/5 Rating", color: "text-yellow-400" },
+              { icon: Users, label: "200+ Clients", color: "text-blue-400" },
+              { icon: Award, label: "Top 1% Talent", color: "text-purple-400" },
+              { icon: Zap, label: "On-Time Delivery", color: "text-green-400" },
+            ].map(({ icon: Icon, label, color }) => (
+              <div key={label} className="flex items-center gap-2">
+                <Icon className={`w-4 h-4 ${color}`} />
+                <span className="text-xs font-semibold text-white/60">{label}</span>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+
+        {/* Bottom fade to grid section */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#F5F5F7] to-transparent pointer-events-none" />
+      </section>
+
+      {/* ══════════════════════════════════════════════
+           SERVICES GRID — clickable cards
+      ══════════════════════════════════════════════ */}
+      <section className="py-24 bg-[#F5F5F7]">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-14">
+            <motion.p {...fadeUp} className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600 mb-4">
+              Our Expertise
+            </motion.p>
+            <motion.h2
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, ease: [0.21, 0.47, 0.32, 0.98] as any }}
+              className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tighter text-[#1D1D1F]"
+            >
+              Click to explore plans
+            </motion.h2>
+          </div>
+
+          {isLoading ? (
+            <div className="flex justify-center py-20">
+              <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {services?.map((service, i) => {
+                const meta = SERVICE_META[service.category] ?? {
+                  icon: Code,
+                  gradient: "from-blue-500 to-blue-600",
+                };
+                const Icon = meta.icon;
+                const activePlans = service.plans?.filter((p: any) => p.isActive) ?? [];
+                const lowestPrice = activePlans.map((p: any) => p.startingPrice).find(Boolean);
+
+                return (
+                  <motion.div
+                    key={service.id}
+                    initial={{ opacity: 0, y: 40 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.2 }}
+                    transition={{ delay: i * 0.08, duration: 0.5, ease: [0.21, 0.47, 0.32, 0.98] as any }}
+                  >
+                    <Link href={`/services/${service.slug}`}>
+                      <div className="group relative bg-white border border-[#E8E8ED] rounded-3xl p-8 cursor-pointer overflow-hidden h-full hover:shadow-2xl hover:border-blue-100 transition-all duration-500 hover:-translate-y-1">
+                        {/* Hover glow */}
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-blue-50/60 via-white to-purple-50/30 rounded-3xl" />
+
+                        <div className="relative z-10">
+                          {/* Icon */}
+                          <div
+                            className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${meta.gradient} flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300`}
+                          >
+                            <Icon className="w-7 h-7 text-white" />
+                          </div>
+
+                          <h3 className="text-xl font-bold text-[#1D1D1F] mb-3 tracking-tight">
+                            {service.title}
+                          </h3>
+                          <p className="text-[#6E6E73] leading-relaxed text-sm mb-7">
+                            {service.description}
+                          </p>
+
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {lowestPrice && (
+                                <span className="text-xs font-semibold text-[#6E6E73] bg-[#F5F5F7] border border-[#E8E8ED] rounded-full px-3 py-1">
+                                  {lowestPrice}
+                                </span>
+                              )}
+                              {activePlans.length > 0 && (
+                                <span className="text-xs font-bold text-blue-600 bg-blue-50 rounded-full px-3 py-1">
+                                  {activePlans.length} plan{activePlans.length !== 1 ? "s" : ""}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1.5 text-blue-600 font-semibold text-sm group-hover:gap-2.5 transition-all duration-200 shrink-0">
+                              Explore <ArrowRight className="w-4 h-4" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 
-      <section className="py-24">
-        <div className="container mx-auto px-4">
-          {isLoading ? (
-            <div className="flex justify-center py-20"><Loader2 className="w-10 h-10 animate-spin text-primary" /></div>
-          ) : (
-            <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-              {services?.map((service) => {
-                const isOpen = expandedId === service.id;
-                const activePlans = service.plans?.filter(p => p.isActive) ?? [];
-                return (
-                  <div key={service.id} className="group rounded-3xl bg-card border border-border hover:border-primary/20 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
-                    <div className="p-8">
-                      <h2 className="text-2xl font-bold mb-4 tracking-tight">{service.title}</h2>
-                      <p className="text-muted-foreground mb-6 leading-relaxed min-h-[60px]">
-                        {service.description}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        {service.startingPrice && (
-                          <span className="font-semibold text-sm bg-muted px-3 py-1 rounded-full text-foreground/80">
-                            From {service.startingPrice}
-                          </span>
-                        )}
-                        {activePlans.length > 0 ? (
-                          <Button
-                            variant="ghost"
-                            className="font-semibold group-hover:text-primary transition-colors ml-auto"
-                            onClick={() => setExpandedId(isOpen ? null : service.id)}
-                          >
-                            {isOpen ? "Hide Plans" : `View ${activePlans.length} Plans`}
-                            {isOpen ? <ChevronUp className="w-4 h-4 ml-2" /> : <ChevronDown className="w-4 h-4 ml-2" />}
-                          </Button>
-                        ) : (
-                          <Link href={`/quote?service=${service.category}`} className="ml-auto">
-                            <Button variant="ghost" className="font-semibold group-hover:text-primary transition-colors">
-                              Request Quote <ArrowRight className="w-4 h-4 ml-2" />
-                            </Button>
-                          </Link>
-                        )}
-                      </div>
-                    </div>
-
-                    {isOpen && activePlans.length > 0 && (
-                      <div className="border-t border-border bg-muted/20">
-                        <div className="divide-y divide-border/50">
-                          {activePlans.map((plan) => {
-                            const badge = plan.badge !== "NONE" ? badgeConfig[plan.badge] : null;
-                            return (
-                              <div key={plan.id} className="px-8 py-5 flex items-start justify-between gap-4 hover:bg-muted/40 transition-colors">
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                                    <span className="font-semibold text-sm">{plan.name}</span>
-                                    {badge && (
-                                      <Badge className={`text-xs px-2 py-0 h-5 ${badge.className}`}>{badge.label}</Badge>
-                                    )}
-                                    <Badge variant="outline" className="text-xs px-2 py-0 h-5 font-medium">
-                                      {plan.pricingType === "MONTHLY" ? "Monthly" : "One-time"}
-                                    </Badge>
-                                  </div>
-                                  <p className="text-xs text-muted-foreground leading-relaxed">{plan.description}</p>
-                                </div>
-                                <div className="shrink-0 text-right">
-                                  {plan.startingPrice && (
-                                    <div className="text-sm font-bold text-primary whitespace-nowrap">{plan.startingPrice}</div>
-                                  )}
-                                  <Link href={`/quote?service=${service.category}&plan=${plan.id}`}>
-                                    <Button variant="ghost" size="sm" className="text-xs mt-1 h-7 px-2 text-muted-foreground hover:text-primary">
-                                      Quote <ArrowRight className="w-3 h-3 ml-1" />
-                                    </Button>
-                                  </Link>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                        <div className="px-8 py-4 border-t border-border/50">
-                          <Link href={`/quote?service=${service.category}`}>
-                            <Button size="sm" className="w-full rounded-xl font-semibold">
-                              Get a Custom Quote <ArrowRight className="w-4 h-4 ml-2" />
-                            </Button>
-                          </Link>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-              {services?.length === 0 && (
-                <div className="col-span-2 text-center py-20 text-muted-foreground">No services available right now.</div>
-              )}
-            </div>
-          )}
+      {/* ══════════════════════════════════════════════
+           CTA — Dark
+      ══════════════════════════════════════════════ */}
+      <section className="relative overflow-hidden bg-[#06060A] py-28">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[60vh] rounded-full bg-blue-500/15 blur-[100px]" />
+          <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-purple-500/10 blur-3xl" />
+        </div>
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <motion.h2
+            {...fadeUp}
+            className="text-4xl sm:text-5xl font-extrabold tracking-tighter text-white mb-5 leading-[1.1]"
+          >
+            Not sure where to start?
+          </motion.h2>
+          <motion.p {...fadeUp} className="text-white/50 text-lg max-w-md mx-auto mb-10 leading-relaxed">
+            Book a free 30-minute call and we'll match you with the right service and plan for your project.
+          </motion.p>
+          <motion.div {...fadeUp} className="flex flex-wrap justify-center gap-4">
+            <Link
+              href="/consultation"
+              className="inline-flex h-12 items-center justify-center rounded-full bg-white text-[#06060A] px-8 text-sm font-bold shadow-2xl hover:bg-blue-50 transition-all duration-200 hover:-translate-y-0.5"
+            >
+              Book a Free Call
+            </Link>
+            <Link
+              href="/quote"
+              className="inline-flex h-12 items-center justify-center rounded-full border border-white/20 text-white px-8 text-sm font-semibold hover:bg-white/[0.06] transition-colors duration-200"
+            >
+              Get a Quote <ArrowRight className="ml-2 w-4 h-4" />
+            </Link>
+          </motion.div>
         </div>
       </section>
     </div>
