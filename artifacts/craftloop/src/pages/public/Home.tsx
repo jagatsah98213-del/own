@@ -260,9 +260,7 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.35 }}
               className="text-[#8E8E9A] text-lg leading-relaxed mb-10 max-w-lg"
-            >
-              Trivinex Partners is a premium creative studio delivering elite web development, design, video, photography, and SEO — executed by the world's top 1% freelance talent.
-            </motion.p>
+            >Trivinex Partners is a premium creative studio delivering elite web development, design, video, photography, and SEO  executed by the world's top 1% talent.</motion.p>
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -319,7 +317,6 @@ export default function Home() {
         {/* Bottom fade */}
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent pointer-events-none" />
       </section>
-
       {/* ═══════════════════════════════════════════════════════════
            MARQUEE — Skills/tags scrolling strip
       ═══════════════════════════════════════════════════════════ */}
@@ -346,7 +343,6 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
-
       {/* ═══════════════════════════════════════════════════════════
            HEADLINE STATEMENT — Apple-style big statement
       ═══════════════════════════════════════════════════════════ */}
@@ -373,7 +369,6 @@ export default function Home() {
           </motion.p>
         </div>
       </section>
-
       {/* ═══════════════════════════════════════════════════════════
            SERVICES — 3D tilt cards on white background
       ═══════════════════════════════════════════════════════════ */}
@@ -406,7 +401,6 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
-
       {/* ═══════════════════════════════════════════════════════════
            STATS — Dark section, big numbers
       ═══════════════════════════════════════════════════════════ */}
@@ -431,7 +425,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
       {/* ═══════════════════════════════════════════════════════════
            PROCESS — Light, minimal, Apple-like steps
       ═══════════════════════════════════════════════════════════ */}
@@ -479,7 +472,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
       {/* ═══════════════════════════════════════════════════════════
            CTA — Premium dark gradient
       ═══════════════════════════════════════════════════════════ */}

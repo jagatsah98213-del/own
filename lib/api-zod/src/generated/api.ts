@@ -788,7 +788,7 @@ export const createAdminEmployeeBodyPasswordMin = 8;
 export const CreateAdminEmployeeBody = zod.object({
   "fullName": zod.string().min(1),
   "email": zod.string(),
-  "phone": zod.string().min(1),
+  "phone": zod.string().optional(),
   "serviceCategory": zod.enum(['WEB_DEVELOPMENT', 'VIDEO_EDITING', 'PHOTOGRAPHY_VIDEOGRAPHY', 'GRAPHIC_DESIGN', 'CONTENT_WRITING', 'SEO_DIGITAL_MARKETING']),
   "password": zod.string().min(createAdminEmployeeBodyPasswordMin)
 })

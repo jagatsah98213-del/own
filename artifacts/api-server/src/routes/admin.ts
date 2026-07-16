@@ -397,7 +397,7 @@ router.post("/admin/employees", async (req, res) => {
       userId: user.id,
       fullName: body.fullName,
       email: body.email,
-      phone: body.phone,
+      phone: body.phone ?? "",
       serviceCategory: body.serviceCategory,
     })
     .returning();
