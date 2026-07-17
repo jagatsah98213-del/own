@@ -20,6 +20,7 @@ import {
   testimonialsTable,
   faqsTable,
   auditLogsTable,
+  siteSettingsTable,
 } from "@workspace/db";
 import {
   GetAdminDashboardResponse,
@@ -752,6 +753,38 @@ router.delete("/admin/faqs/:id", async (req, res) => {
   const id = Number(req.params.id);
   await db.delete(faqsTable).where(eq(faqsTable.id, id));
   res.status(204).end();
+});
+
+// ---------- Site Settings ----------
+
+router.get("/admin/site-settings", async (_req, res) => {
+  const rows = await db.select().from(siteSettingsTable).orderBy(siteSettingsTable.key);
+  res.json(rows);
+});
+
+router.patch("/admin/site-settings/:key", async (req, res) => {
+  const key = req.params.key;
+  const { value } = req.body;
+  if (typeof value !== "string") {
+    res.status(400).json({ message: "value must be a string" });
+    return;
+  }
+  const [updated] = await db
+    .update(siteSettingsTable)
+    .set({ value, updatedAt: new Date() })
+    .where(eq(siteSettingsTable.key, key))
+    .returning();
+  if (!updated) {
+    // upsert if key doesn't exist yet
+    const [inserted] = await db
+      .insert(siteSettingsTable)
+      .values({ key, value, label: key })
+      .returning();
+    res.json(inserted);
+    return;
+  }
+  await recordAuditLog(String(req.session.userId), "site_settings.update", { key, value });
+  res.json(updated);
 });
 
 // ---------- Audit logs ----------

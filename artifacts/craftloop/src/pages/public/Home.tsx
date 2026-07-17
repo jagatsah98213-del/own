@@ -1,7 +1,8 @@
 import { useRef, useCallback } from "react";
 import { Link } from "wouter";
 import { motion, useMotionValue, useSpring, useTransform, useInView } from "framer-motion";
-import { ArrowRight, Code, Video, Camera, Palette, PenTool, TrendingUp, Star, Users, Award, Zap } from "lucide-react";
+import { ArrowRight, Code, Video, Camera, Palette, PenTool, TrendingUp } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 // Mouse-tracking 3D tilt hook for service cards
 function useTilt() {
@@ -29,12 +30,13 @@ const services = [
   { icon: TrendingUp, title: "SEO & Marketing", desc: "Data-driven organic strategies and measurable digital growth campaigns.", color: "from-cyan-500 to-teal-600" },
 ];
 
-const stats = [
-  { val: "200+", label: "Clients Served" },
-  { val: "98%", label: "Satisfaction Rate" },
-  { val: "5+", label: "Years of Excellence" },
-  { val: "Top 1%", label: "Talent Pool" },
-];
+function usePublicSettings() {
+  return useQuery<Record<string, string>>({
+    queryKey: ["public-site-settings"],
+    queryFn: () => fetch("/api/public/site-settings").then(r => r.json()),
+    staleTime: 5 * 60 * 1000,
+  });
+}
 
 function ServiceCard({ service, index }: { service: typeof services[0]; index: number }) {
   const { ref, rotateX, rotateY, handleMouseMove, handleMouseLeave } = useTilt();
@@ -54,9 +56,7 @@ function ServiceCard({ service, index }: { service: typeof services[0]; index: n
           onMouseLeave={handleMouseLeave}
           className="group relative bg-white border border-[#E8E8ED] rounded-3xl p-8 cursor-pointer overflow-hidden h-full"
         >
-          {/* Hover glow */}
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-blue-50/80 via-white to-purple-50/40 rounded-3xl" />
-
           <div style={{ transform: "translateZ(30px)" }} className="relative z-10">
             <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${service.color} flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
               <service.icon className="w-7 h-7 text-white" />
@@ -74,38 +74,40 @@ function ServiceCard({ service, index }: { service: typeof services[0]; index: n
 }
 
 // Floating dashboard card for hero
-function HeroDashboardCard() {
-  const ref = useRef<HTMLDivElement>(null);
+function HeroDashboardCard({ settings }: { settings: Record<string, string> }) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const rotateX = useSpring(useTransform(y, [-200, 200], [12, -12]), { stiffness: 200, damping: 30 });
   const rotateY = useSpring(useTransform(x, [-200, 200], [-12, 12]), { stiffness: 200, damping: 30 });
-
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    x.set(e.clientX - window.innerWidth / 2);
-    y.set(e.clientY - window.innerHeight / 2);
-  }, [x, y]);
-
+  const ref = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
+
+  // Bar chart — 12 static bars that look like a monthly deliverables chart
+  const bars = [45, 65, 40, 80, 55, 90, 70, 85, 60, 95, 75, 88];
+
+  const revenue = settings.hero_revenue || "$128k";
+  const clients = settings.stat_1_value || "200+";
+
   return (
     <div
       ref={sectionRef}
       className="relative flex items-center justify-center"
-      onMouseMove={(e) => { x.set(e.clientX - (sectionRef.current?.getBoundingClientRect().left ?? 0) - (sectionRef.current?.offsetWidth ?? 0) / 2); y.set(e.clientY - (sectionRef.current?.getBoundingClientRect().top ?? 0) - (sectionRef.current?.offsetHeight ?? 0) / 2); }}
+      onMouseMove={(e) => {
+        const el = sectionRef.current;
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        x.set(e.clientX - rect.left - rect.width / 2);
+        y.set(e.clientY - rect.top - rect.height / 2);
+      }}
       onMouseLeave={() => { x.set(0); y.set(0); }}
     >
-      {/* Outer glow */}
       <div className="absolute inset-0 bg-gradient-radial from-blue-500/20 via-purple-500/10 to-transparent blur-3xl scale-150" />
-
-      {/* Main floating card */}
       <motion.div
         ref={ref}
         style={{ rotateX, rotateY, transformPerspective: 1200, transformStyle: "preserve-3d" }}
         className="relative w-[420px] max-w-full"
       >
-        {/* Card shadow layer */}
         <div className="absolute inset-0 translate-y-8 scale-95 bg-blue-500/20 rounded-3xl blur-2xl" />
-
         <div className="relative bg-white/[0.05] backdrop-blur-2xl border border-white/[0.12] rounded-3xl p-6 shadow-[0_40px_80px_rgba(0,0,0,0.6)]">
           {/* Window chrome */}
           <div className="flex items-center gap-2 mb-5">
@@ -114,13 +116,12 @@ function HeroDashboardCard() {
             <div className="w-3 h-3 rounded-full bg-[#28C840]" />
             <div className="flex-1 mx-4 h-5 bg-white/[0.06] rounded-full" />
           </div>
-
           {/* Metrics grid */}
           <div className="grid grid-cols-3 gap-3 mb-4">
             {[
-              { label: "Projects", val: "24", change: "+3", up: true },
-              { label: "Clients", val: "200+", change: "+12", up: true },
-              { label: "Revenue", val: "$128k", change: "+8%", up: true },
+              { label: "Revenue", val: revenue, change: "+8%", up: true },
+              { label: "Clients", val: clients, change: "+12", up: true },
+              { label: "Rating", val: "4.9/5", change: "★ Top", up: true },
             ].map((m) => (
               <div key={m.label} className="bg-white/[0.06] border border-white/[0.08] rounded-xl p-3">
                 <div className="text-[10px] text-white/40 mb-1 font-medium">{m.label}</div>
@@ -129,39 +130,37 @@ function HeroDashboardCard() {
               </div>
             ))}
           </div>
-
-          {/* Chart */}
+          {/* Bar chart */}
           <div className="bg-white/[0.04] border border-white/[0.06] rounded-xl p-4 mb-4">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs text-white/50 font-semibold">Deliverables</span>
-              <span className="text-xs text-blue-400 font-bold">This month</span>
+              <span className="text-xs text-blue-400 font-bold">12-month trend</span>
             </div>
             <div className="flex items-end gap-1.5 h-14">
-              {[45, 65, 40, 80, 55, 90, 70, 85, 60, 95, 75, 88].map((h, i) => (
+              {bars.map((h, i) => (
                 <div key={i} className="flex-1 rounded-sm overflow-hidden" style={{ height: `${h}%` }}>
                   <div
                     className="w-full h-full rounded-sm"
                     style={{
-                      background: i === 10 || i === 11
-                        ? 'linear-gradient(to top, #3B82F6, #60A5FA)'
-                        : 'rgba(255,255,255,0.12)'
+                      background: i >= 10
+                        ? "linear-gradient(to top, #3B82F6, #60A5FA)"
+                        : "rgba(255,255,255,0.12)",
                     }}
                   />
                 </div>
               ))}
             </div>
           </div>
-
           {/* Team row */}
           <div className="flex items-center gap-3">
             <div className="flex -space-x-2">
               {["bg-blue-500", "bg-purple-500", "bg-pink-500", "bg-green-500"].map((c, i) => (
                 <div key={i} className={`w-7 h-7 rounded-full ${c} border-2 border-[#0A0A0F] flex items-center justify-center text-[9px] font-bold text-white`}>
-                  {["JK","AS","MR","TL"][i]}
+                  {["JK", "AS", "MR", "TL"][i]}
                 </div>
               ))}
             </div>
-            <span className="text-xs text-white/40">12 active freelancers</span>
+            <span className="text-xs text-white/40">Top-rated freelancers</span>
             <div className="ml-auto flex items-center gap-1">
               <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
               <span className="text-[10px] text-green-400 font-semibold">Live</span>
@@ -173,193 +172,197 @@ function HeroDashboardCard() {
         <motion.div
           animate={{ y: [0, -8, 0] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          style={{ transform: "translateZ(60px)" }}
-          className="absolute -top-5 -right-6 bg-white rounded-2xl px-4 py-2 shadow-xl border border-gray-100 flex items-center gap-2"
+          className="absolute -top-4 -right-4 bg-white rounded-2xl px-4 py-2.5 shadow-2xl border border-[#E8E8ED] flex items-center gap-2.5"
         >
-          <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-          <span className="text-sm font-bold text-gray-800">4.9 / 5.0</span>
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center text-white text-sm">✓</div>
+          <div>
+            <div className="text-[11px] font-bold text-[#1D1D1F] leading-none">Project delivered</div>
+            <div className="text-[10px] text-[#6E6E73] mt-0.5">2 minutes ago</div>
+          </div>
         </motion.div>
 
         {/* Floating badge 2 */}
         <motion.div
           animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          style={{ transform: "translateZ(60px)" }}
-          className="absolute -bottom-4 -left-6 bg-white rounded-2xl px-4 py-2 shadow-xl border border-gray-100 flex items-center gap-2"
+          transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+          className="absolute -bottom-4 -left-4 bg-white rounded-2xl px-4 py-2.5 shadow-2xl border border-[#E8E8ED] flex items-center gap-2.5"
         >
-          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-sm font-bold text-gray-800">Project Delivered</span>
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-sm">★</div>
+          <div>
+            <div className="text-[11px] font-bold text-[#1D1D1F] leading-none">5-star review</div>
+            <div className="text-[10px] text-[#6E6E73] mt-0.5">From happy client</div>
+          </div>
         </motion.div>
       </motion.div>
     </div>
   );
 }
 
+// Animated stat counter
+function StatItem({ val, label, delay }: { val: string; label: string; delay: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.5 });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ delay, duration: 0.6 }}
+    >
+      <div className="text-5xl lg:text-6xl font-extrabold tracking-tighter text-white mb-3">{val}</div>
+      <div className="text-sm font-semibold text-white/40 uppercase tracking-widest">{label}</div>
+    </motion.div>
+  );
+}
+
 const fadeUp = {
-  initial: { opacity: 0, y: 30 },
+  initial: { opacity: 0, y: 20 },
   whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, amount: 0.4 },
+  viewport: { once: true },
   transition: { duration: 0.6, ease: [0.21, 0.47, 0.32, 0.98] },
-};
+} as const;
 
 export default function Home() {
+  const { data: settings = {} } = usePublicSettings();
+
+  const stats = [
+    { val: settings.stat_1_value || "200+", label: settings.stat_1_label || "Clients Served" },
+    { val: settings.stat_2_value || "98%", label: settings.stat_2_label || "Satisfaction Rate" },
+    { val: settings.stat_3_value || "5+", label: settings.stat_3_label || "Years of Excellence" },
+    { val: settings.stat_4_value || "Top 1%", label: settings.stat_4_label || "Talent Pool" },
+  ];
+
   return (
-    <div className="flex flex-col overflow-hidden">
+    <div>
       {/* ═══════════════════════════════════════════════════════════
-           HERO — Dark, full-viewport, 3D
+           HERO — Full-viewport dark with 3D dashboard card
       ═══════════════════════════════════════════════════════════ */}
-      <section className="relative min-h-[100dvh] flex items-center bg-[#06060A] overflow-hidden">
+      <section className="relative min-h-screen bg-[#06060A] flex items-center overflow-hidden">
         {/* Background effects */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-full bg-blue-600/10 blur-[120px]" />
-          <div className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-purple-600/10 blur-[120px]" />
-          {/* Subtle grid */}
+          <div className="absolute top-1/3 left-1/4 w-[600px] h-[600px] rounded-full bg-blue-600/[0.08] blur-[120px]" />
+          <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-purple-600/[0.06] blur-[100px]" />
           <div
-            className="absolute inset-0 opacity-[0.025]"
+            className="absolute inset-0 opacity-[0.02]"
             style={{
-              backgroundImage: 'linear-gradient(rgba(255,255,255,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.8) 1px, transparent 1px)',
-              backgroundSize: '64px 64px',
+              backgroundImage: `linear-gradient(rgba(255,255,255,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.8) 1px, transparent 1px)`,
+              backgroundSize: "60px 60px",
             }}
           />
         </div>
 
-        <div className="container mx-auto px-4 md:px-8 grid lg:grid-cols-2 gap-16 items-center relative z-10 pt-24 pb-20">
-          {/* Left: Text */}
-          <div className="flex flex-col">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="inline-flex items-center gap-2.5 rounded-full bg-white/[0.06] border border-white/[0.12] px-4 py-1.5 text-xs font-semibold text-white/70 mb-8 self-start"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-              Premium Creative Agency
-            </motion.div>
+        <div className="container mx-auto px-4 py-32 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            {/* Left — copy */}
+            <div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="inline-flex items-center gap-2 rounded-full border border-white/[0.12] bg-white/[0.06] px-4 py-1.5 text-sm text-white/70 mb-8"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                World-class creative studio
+              </motion.div>
 
-            <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.2, ease: [0.21, 0.47, 0.32, 0.98] }}
-              className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tighter text-white leading-[1.05] mb-7"
-            >
-              We build{" "}
-              <span
-                style={{
+              <motion.h1
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.1 }}
+                className="text-5xl lg:text-7xl font-extrabold tracking-tighter text-white leading-[1.05] mb-6"
+              >
+                Build something
+                <br />
+                <span style={{
                   background: "linear-gradient(135deg, #60A5FA 0%, #A78BFA 50%, #F472B6 100%)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                   backgroundClip: "text",
-                }}
+                }}>
+                  extraordinary.
+                </span>
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="text-lg text-white/50 leading-relaxed max-w-lg mb-10"
               >
-                digital legacies.
-              </span>
-            </motion.h1>
+                Trivinex Partners is a premium creative agency delivering world-class web development, design, video, and marketing — powered by the top 1% of verified talent.
+              </motion.p>
 
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.35 }}
-              className="text-[#8E8E9A] text-lg leading-relaxed mb-10 max-w-lg"
-            >Trivinex Partners is a premium creative studio delivering elite web development, design, video, photography, and SEO  executed by the world's top 1% talent.</motion.p>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="flex flex-wrap gap-4"
+              >
+                <Link
+                  href="/quote"
+                  className="inline-flex h-14 items-center justify-center rounded-full bg-white text-[#06060A] px-8 text-base font-bold shadow-2xl hover:bg-blue-50 transition-all duration-200 hover:-translate-y-0.5"
+                >
+                  Start a Project
+                </Link>
+                <Link
+                  href="/consultation"
+                  className="inline-flex h-14 items-center justify-center rounded-full border border-white/20 text-white px-8 text-base font-semibold hover:bg-white/[0.06] transition-colors duration-200"
+                >
+                  Book a Free Call <ArrowRight className="ml-2 w-4 h-4" />
+                </Link>
+              </motion.div>
+            </div>
 
+            {/* Right — 3D floating dashboard card */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.45 }}
-              className="flex flex-wrap gap-4 mb-12"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.3, ease: [0.21, 0.47, 0.32, 0.98] }}
             >
-              <Link
-                href="/quote"
-                className="inline-flex h-13 items-center justify-center rounded-full bg-white text-[#06060A] px-7 text-sm font-bold shadow-2xl hover:bg-blue-50 transition-all duration-200 hover:-translate-y-0.5"
-              >
-                Start a Project
-              </Link>
-              <Link
-                href="/consultation"
-                className="inline-flex h-13 items-center justify-center rounded-full border border-white/20 text-white px-7 text-sm font-semibold hover:bg-white/[0.06] transition-all duration-200"
-              >
-                Book a Free Call <ArrowRight className="ml-2 w-4 h-4" />
-              </Link>
-            </motion.div>
-
-            {/* Trust row */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-              className="flex items-center flex-wrap gap-6 pt-8 border-t border-white/[0.08]"
-            >
-              {[
-                { icon: Star, label: "4.9/5 Rating", color: "text-yellow-400" },
-                { icon: Users, label: "200+ Clients", color: "text-blue-400" },
-                { icon: Award, label: "Top 1% Talent", color: "text-purple-400" },
-                { icon: Zap, label: "On-Time Delivery", color: "text-green-400" },
-              ].map(({ icon: Icon, label, color }) => (
-                <div key={label} className="flex items-center gap-2">
-                  <Icon className={`w-4 h-4 ${color}`} />
-                  <span className="text-xs font-semibold text-white/60">{label}</span>
-                </div>
-              ))}
+              <HeroDashboardCard settings={settings} />
             </motion.div>
           </div>
-
-          {/* Right: 3D Dashboard Card */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.3, ease: [0.21, 0.47, 0.32, 0.98] }}
-            className="hidden lg:flex justify-center"
-          >
-            <HeroDashboardCard />
-          </motion.div>
         </div>
 
         {/* Bottom fade */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-[#F5F5F7] to-transparent" />
       </section>
+
       {/* ═══════════════════════════════════════════════════════════
-           MARQUEE — Skills/tags scrolling strip
+           TRUST BAR — Subtle on light bg
       ═══════════════════════════════════════════════════════════ */}
-      <section className="py-6 bg-white border-b border-[#E8E8ED] overflow-hidden">
-        <div className="relative flex overflow-hidden">
-          <motion.div
-            animate={{ x: ["0%", "-50%"] }}
-            transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-            className="flex gap-8 whitespace-nowrap"
-          >
+      <section className="py-10 bg-[#F5F5F7]">
+        <div className="container mx-auto px-4">
+          <motion.div {...fadeUp} className="flex flex-wrap justify-center gap-10 text-center">
             {[
-              "Web Development", "UI/UX Design", "Video Editing", "Brand Identity",
-              "Photography", "Content Writing", "SEO Strategy", "Motion Graphics",
-              "React & Next.js", "3D Design", "Social Media", "Digital Marketing",
-              "Web Development", "UI/UX Design", "Video Editing", "Brand Identity",
-              "Photography", "Content Writing", "SEO Strategy", "Motion Graphics",
-              "React & Next.js", "3D Design", "Social Media", "Digital Marketing",
-            ].map((tag, i) => (
-              <span key={i} className="text-sm font-semibold text-[#1D1D1F] flex items-center gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                {tag}
-              </span>
+              { icon: "★", label: "4.9/5 Rating" },
+              { icon: "👥", label: "200+ Clients" },
+              { icon: "🏆", label: "Top 1% Talent" },
+              { icon: "⚡", label: "On-Time Delivery" },
+            ].map(({ icon, label }) => (
+              <div key={label} className="flex items-center gap-2.5 text-[#6E6E73]">
+                <span className="text-lg">{icon}</span>
+                <span className="text-sm font-semibold">{label}</span>
+              </div>
             ))}
           </motion.div>
         </div>
       </section>
+
       {/* ═══════════════════════════════════════════════════════════
-           HEADLINE STATEMENT — Apple-style big statement
+           CRAFT — Editorial dark text block
       ═══════════════════════════════════════════════════════════ */}
       <section className="py-28 bg-white">
-        <div className="container mx-auto px-4 text-center max-w-4xl">
-          <motion.p
-            {...fadeUp}
-            className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600 mb-6"
-          >
-            Our Purpose
+        <div className="container mx-auto px-4 max-w-4xl text-center">
+          <motion.p {...fadeUp} className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600 mb-6">
+            The Trivinex Standard
           </motion.p>
           <motion.h2
-            initial={{ opacity: 0, y: 40 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.5 }}
+            viewport={{ once: true }}
             transition={{ duration: 0.7, ease: [0.21, 0.47, 0.32, 0.98] }}
-            className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tighter text-[#1D1D1F] leading-[1.1] mb-8"
+            className="text-4xl lg:text-5xl font-extrabold tracking-tighter text-[#1D1D1F] leading-[1.15] mb-8"
           >
             Every pixel, every frame,{" "}
             <span className="text-[#6E6E73]">every word — crafted to last.</span>
@@ -369,8 +372,9 @@ export default function Home() {
           </motion.p>
         </div>
       </section>
+
       {/* ═══════════════════════════════════════════════════════════
-           SERVICES — 3D tilt cards on white background
+           SERVICES — 3D tilt cards on light bg
       ═══════════════════════════════════════════════════════════ */}
       <section className="py-28 bg-[#F5F5F7]">
         <div className="container mx-auto px-4">
@@ -401,8 +405,9 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+
       {/* ═══════════════════════════════════════════════════════════
-           STATS — Dark section, big numbers
+           STATS — Dark section, big dynamic numbers
       ═══════════════════════════════════════════════════════════ */}
       <section className="py-28 bg-[#1D1D1F] relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
@@ -411,20 +416,12 @@ export default function Home() {
         <div className="container mx-auto px-4 relative">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-12 text-center">
             {stats.map((s, i) => (
-              <motion.div
-                key={s.label}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.5 }}
-                transition={{ delay: i * 0.1, duration: 0.6 }}
-              >
-                <div className="text-5xl lg:text-6xl font-extrabold tracking-tighter text-white mb-3">{s.val}</div>
-                <div className="text-sm font-semibold text-white/40 uppercase tracking-widest">{s.label}</div>
-              </motion.div>
+              <StatItem key={s.label} val={s.val} label={s.label} delay={i * 0.1} />
             ))}
           </div>
         </div>
       </section>
+
       {/* ═══════════════════════════════════════════════════════════
            PROCESS — Light, minimal, Apple-like steps
       ═══════════════════════════════════════════════════════════ */}
@@ -446,9 +443,7 @@ export default function Home() {
           </div>
 
           <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-12 relative">
-            {/* Connecting line */}
             <div className="hidden md:block absolute top-10 left-[16%] right-[16%] h-px bg-gradient-to-r from-transparent via-[#D2D2D7] to-transparent" />
-
             {[
               { step: "01", title: "Discovery", desc: "We map out your goals, requirements, and vision in a focused kick-off session." },
               { step: "02", title: "Execution", desc: "Dedicated specialists craft your project with meticulous detail and weekly progress updates." },
@@ -472,6 +467,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+
       {/* ═══════════════════════════════════════════════════════════
            CTA — Premium dark gradient
       ═══════════════════════════════════════════════════════════ */}
@@ -502,7 +498,7 @@ export default function Home() {
             {...fadeUp}
             className="text-white/50 text-xl max-w-xl mx-auto mb-12 leading-relaxed"
           >
-            Join 200+ businesses that trust Trivinex Partners to deliver world-class digital work.
+            Join {settings.stat_1_value || "200+"} businesses that trust Trivinex Partners to deliver world-class digital work.
           </motion.p>
           <motion.div {...fadeUp} className="flex flex-wrap justify-center gap-4">
             <Link

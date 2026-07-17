@@ -1,5 +1,5 @@
 import { useListAdminServices, useListAdminTestimonials, useUpdateAdminTestimonial, getListAdminTestimonialsQueryKey, useListAdminPortfolioItems, useCreateAdminPortfolioItem, getListAdminPortfolioItemsQueryKey, getListAdminServicesQueryKey } from "@workspace/api-client-react";
-import { Loader2, ExternalLink, Plus, Check, X, Pencil, Trash2, GripVertical, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, ExternalLink, Plus, Check, X, Pencil, Trash2, GripVertical, ChevronDown, ChevronUp, BarChart3, Phone, Mail, MessageCircle, Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,170 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useState } from "react";
 import { PortfolioItemInputMediaType, ServiceCategory } from "@workspace/api-client-react/api.schemas";
+
+// ─── Site Settings hooks ───────────────────────────────────────────────────────
+interface SiteSetting { key: string; value: string; label: string }
+
+function useSiteSettings() {
+  return useQuery<SiteSetting[]>({
+    queryKey: ["admin-site-settings"],
+    queryFn: () => fetch("/api/admin/site-settings", { credentials: "include" }).then(r => r.json()),
+  });
+}
+
+function useUpdateSiteSetting() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ key, value }: { key: string; value: string }) =>
+      fetch(`/api/admin/site-settings/${encodeURIComponent(key)}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ value }),
+      }).then(r => r.json()),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-site-settings"] });
+      qc.invalidateQueries({ queryKey: ["public-site-settings"] });
+    },
+  });
+}
+
+// ─── Stats Editor ──────────────────────────────────────────────────────────────
+function SiteStatsPanel({ settings }: { settings: SiteSetting[] }) {
+  const { toast } = useToast();
+  const updateSetting = useUpdateSiteSetting();
+
+  const statKeys = [
+    { valueKey: "stat_1_value", labelKey: "stat_1_label", title: "Stat 1" },
+    { valueKey: "stat_2_value", labelKey: "stat_2_label", title: "Stat 2" },
+    { valueKey: "stat_3_value", labelKey: "stat_3_label", title: "Stat 3" },
+    { valueKey: "stat_4_value", labelKey: "stat_4_label", title: "Stat 4" },
+    { valueKey: "hero_revenue", labelKey: null, title: "Hero Card Revenue" },
+  ];
+
+  const getVal = (key: string) => settings.find(s => s.key === key)?.value ?? "";
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const draft = (key: string) => drafts[key] ?? getVal(key);
+
+  const save = (key: string) => {
+    const value = draft(key);
+    updateSetting.mutate({ key, value }, {
+      onSuccess: () => toast({ title: "Saved" }),
+      onError: () => toast({ variant: "destructive", title: "Save failed" }),
+    });
+  };
+
+  return (
+    <div className="space-y-4 p-4">
+      <p className="text-sm text-muted-foreground">These numbers appear in the dark stats bar on the homepage and in the hero dashboard card.</p>
+      <div className="grid sm:grid-cols-2 gap-4">
+        {statKeys.map(({ valueKey, labelKey, title }) => (
+          <div key={valueKey} className="border border-border rounded-xl p-4 space-y-3 bg-background">
+            <p className="text-sm font-bold text-foreground">{title}</p>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Value (e.g. 200+)"
+                value={draft(valueKey)}
+                onChange={e => setDrafts(d => ({ ...d, [valueKey]: e.target.value }))}
+              />
+              <Button size="sm" variant="outline" onClick={() => save(valueKey)} disabled={updateSetting.isPending}>
+                <Save className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+            {labelKey && (
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Label (e.g. Clients Served)"
+                  value={draft(labelKey)}
+                  onChange={e => setDrafts(d => ({ ...d, [labelKey]: e.target.value }))}
+                />
+                <Button size="sm" variant="outline" onClick={() => save(labelKey)} disabled={updateSetting.isPending}>
+                  <Save className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Contact Info Editor ────────────────────────────────────────────────────────
+function ContactInfoPanel({ settings }: { settings: SiteSetting[] }) {
+  const { toast } = useToast();
+  const updateSetting = useUpdateSiteSetting();
+  const getVal = (key: string) => settings.find(s => s.key === key)?.value ?? "";
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const draft = (key: string) => drafts[key] ?? getVal(key);
+
+  const save = (key: string) => {
+    updateSetting.mutate({ key, value: draft(key) }, {
+      onSuccess: () => toast({ title: "Contact info saved" }),
+      onError: () => toast({ variant: "destructive", title: "Save failed" }),
+    });
+  };
+
+  const fields = [
+    { key: "contact_email", label: "Email Address", placeholder: "hello@yourcompany.com", icon: <Mail className="w-4 h-4 text-muted-foreground" />, hint: "Opens email client (mailto:)" },
+    { key: "contact_phone", label: "Phone Number", placeholder: "+1 (555) 000-0000", icon: <Phone className="w-4 h-4 text-muted-foreground" />, hint: "Opens phone dialer (tel:)" },
+    { key: "contact_whatsapp", label: "WhatsApp Number", placeholder: "15550000000 (no + or spaces)", icon: <MessageCircle className="w-4 h-4 text-muted-foreground" />, hint: "Opens WhatsApp (wa.me/) — digits only, include country code" },
+  ];
+
+  return (
+    <div className="space-y-4 p-4">
+      <p className="text-sm text-muted-foreground">Contact links appear in the website footer. Visitors can click them to call, email, or message you on WhatsApp.</p>
+      <div className="space-y-4">
+        {fields.map(({ key, label, placeholder, icon, hint }) => (
+          <div key={key} className="border border-border rounded-xl p-4 bg-background">
+            <div className="flex items-center gap-2 mb-2">
+              {icon}
+              <p className="text-sm font-bold">{label}</p>
+            </div>
+            <div className="flex gap-2">
+              <Input
+                placeholder={placeholder}
+                value={draft(key)}
+                onChange={e => setDrafts(d => ({ ...d, [key]: e.target.value }))}
+              />
+              <Button size="sm" onClick={() => save(key)} disabled={updateSetting.isPending}>
+                <Save className="w-3.5 h-3.5 mr-1" /> Save
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1.5">{hint}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── SMTP Settings panel ────────────────────────────────────────────────────────
+function SmtpInfoPanel() {
+  return (
+    <div className="p-4 space-y-3">
+      <p className="text-sm text-muted-foreground">
+        Automated emails are sent via SMTP whenever a client submits a quote request or a freelancer submits an application.
+        Configure the following environment variables on your server to enable email sending:
+      </p>
+      <div className="rounded-xl bg-muted/60 p-4 font-mono text-xs space-y-1 text-foreground">
+        {[
+          ["SMTP_HOST", "Your SMTP host (e.g. smtp.gmail.com)"],
+          ["SMTP_PORT", "587 (TLS) or 465 (SSL)"],
+          ["SMTP_USER", "Your SMTP username / email"],
+          ["SMTP_PASS", "Your SMTP password or app password"],
+          ["SMTP_FROM", "Sender display address (optional, defaults to SMTP_USER)"],
+        ].map(([key, desc]) => (
+          <div key={key} className="flex gap-3">
+            <span className="text-blue-600 font-bold w-28 shrink-0">{key}</span>
+            <span className="text-muted-foreground"># {desc}</span>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-muted-foreground">Works with Gmail, SendGrid, Mailgun, Zoho, or any standard SMTP provider. If SMTP is not configured, emails are silently skipped — the app still works normally.</p>
+    </div>
+  );
+}
 
 // ─── Portfolio schema ──────────────────────────────────────────────────────────
 const portSchema = z.object({
@@ -354,6 +518,7 @@ export default function SiteContent() {
   const { data: testimonials, isLoading: loadingTestimonials } = useListAdminTestimonials();
   const { data: portfolio, isLoading: loadingPortfolio } = useListAdminPortfolioItems();
   const { data: faqs, isLoading: loadingFaqs } = useFaqs();
+  const { data: siteSettings = [], isLoading: loadingSettings } = useSiteSettings();
 
   const updateTestimonial = useUpdateAdminTestimonial();
   const createPortfolio = useCreateAdminPortfolioItem();
@@ -452,6 +617,49 @@ export default function SiteContent() {
         <h1 className="text-3xl font-extrabold tracking-tight mb-2">Site Content</h1>
         <p className="text-muted-foreground font-medium">Manage public-facing website data.</p>
       </div>
+
+      {/* ── Homepage Stats ── */}
+      <section>
+        <div className="mb-4 flex items-center gap-2">
+          <BarChart3 className="w-5 h-5 text-blue-600" />
+          <h2 className="text-xl font-bold">Homepage Stats</h2>
+        </div>
+        <Card className="shadow-sm overflow-hidden">
+          {loadingSettings ? (
+            <div className="flex justify-center p-8"><Loader2 className="w-6 h-6 animate-spin" /></div>
+          ) : (
+            <SiteStatsPanel settings={siteSettings} />
+          )}
+        </Card>
+      </section>
+
+      {/* ── Contact Info ── */}
+      <section>
+        <div className="mb-4 flex items-center gap-2">
+          <Phone className="w-5 h-5 text-blue-600" />
+          <h2 className="text-xl font-bold">Contact Information</h2>
+        </div>
+        <Card className="shadow-sm overflow-hidden">
+          {loadingSettings ? (
+            <div className="flex justify-center p-8"><Loader2 className="w-6 h-6 animate-spin" /></div>
+          ) : (
+            <ContactInfoPanel settings={siteSettings} />
+          )}
+        </Card>
+      </section>
+
+      {/* ── Email Automation ── */}
+      <section>
+        <div className="mb-4 flex items-center gap-2">
+          <Mail className="w-5 h-5 text-blue-600" />
+          <div>
+            <h2 className="text-xl font-bold">Automated Emails</h2>
+          </div>
+        </div>
+        <Card className="shadow-sm overflow-hidden">
+          <SmtpInfoPanel />
+        </Card>
+      </section>
 
       {/* ── Services ── */}
       <section>

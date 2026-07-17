@@ -1,11 +1,25 @@
 import { Link, useLocation } from "wouter";
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Phone, Mail, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+
+function usePublicSettings() {
+  return useQuery<Record<string, string>>({
+    queryKey: ["public-site-settings"],
+    queryFn: () => fetch("/api/public/site-settings").then(r => r.json()),
+    staleTime: 5 * 60 * 1000,
+  });
+}
 
 export function PublicLayout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { data: settings = {} } = usePublicSettings();
+
+  const phone = settings.contact_phone || "";
+  const email = settings.contact_email || "";
+  const whatsapp = settings.contact_whatsapp || "";
 
   const navLinks = [
     { href: "/services", label: "Services" },
@@ -20,22 +34,18 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
       {/* ─── Nav ─── */}
       <header className="sticky top-0 z-50 w-full border-b border-[#D2D2D7]/60 bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/70">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          {/* Logo */}
           <Link href="/" className="font-extrabold text-lg tracking-tighter flex items-center gap-0.5 shrink-0">
             <span className="text-[#1D1D1F]">TRIVINEX</span>
             <span className="text-blue-600"> PARTNERS</span>
           </Link>
 
-          {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-7">
             {navLinks.map(({ href, label }) => (
               <Link
                 key={href}
                 href={href}
                 className={`text-sm font-medium transition-colors ${
-                  location === href
-                    ? "text-[#1D1D1F]"
-                    : "text-[#6E6E73] hover:text-[#1D1D1F]"
+                  location === href ? "text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"
                 }`}
               >
                 {label}
@@ -43,7 +53,6 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
             ))}
           </nav>
 
-          {/* CTA buttons */}
           <div className="flex items-center gap-3">
             <Link
               href="/freelancers"
@@ -67,7 +76,6 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        {/* Mobile menu */}
         <AnimatePresence>
           {mobileOpen && (
             <motion.div
@@ -97,13 +105,15 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
           )}
         </AnimatePresence>
       </header>
+
       <main className="flex-1">{children}</main>
+
       {/* ─── Footer ─── */}
-      <footer className="bg-[#F5F5F7] border-t border-[#E8E8ED] py-16 mt-[10px] mb-[10px] pt-[64px] pb-[64px] rounded-tl-[0px] rounded-tr-[0px] rounded-br-[0px] rounded-bl-[0px]">
+      <footer className="bg-[#F5F5F7] border-t border-[#E8E8ED] py-16">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             {/* Brand */}
-            <div className="md:col-span-2">
+            <div className="md:col-span-1">
               <span className="font-extrabold text-xl tracking-tighter block mb-3">
                 <span className="text-[#1D1D1F]">TRIVINEX</span>
                 <span className="text-blue-600"> PARTNERS</span>
@@ -132,6 +142,53 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
                 <Link href="/testimonials" className="text-sm text-[#6E6E73] hover:text-[#1D1D1F] transition-colors">Testimonials</Link>
                 <Link href="/freelancers" className="text-sm text-[#6E6E73] hover:text-[#1D1D1F] transition-colors">Join as Freelancer</Link>
                 <Link href="/employee/login" className="text-sm text-[#6E6E73] hover:text-[#1D1D1F] transition-colors">Employee Portal</Link>
+              </div>
+            </div>
+
+            {/* Contact */}
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-[#6E6E73] mb-4">Contact Us</p>
+              <div className="flex flex-col gap-3">
+                {email && (
+                  <a
+                    href={`mailto:${email}`}
+                    className="flex items-center gap-2.5 text-sm text-[#6E6E73] hover:text-blue-600 transition-colors group"
+                  >
+                    <span className="w-7 h-7 rounded-lg bg-[#E8E8ED] group-hover:bg-blue-100 flex items-center justify-center transition-colors shrink-0">
+                      <Mail className="w-3.5 h-3.5" />
+                    </span>
+                    <span className="break-all">{email}</span>
+                  </a>
+                )}
+                {phone && (
+                  <a
+                    href={`tel:${phone.replace(/\s/g, "")}`}
+                    className="flex items-center gap-2.5 text-sm text-[#6E6E73] hover:text-blue-600 transition-colors group"
+                  >
+                    <span className="w-7 h-7 rounded-lg bg-[#E8E8ED] group-hover:bg-blue-100 flex items-center justify-center transition-colors shrink-0">
+                      <Phone className="w-3.5 h-3.5" />
+                    </span>
+                    {phone}
+                  </a>
+                )}
+                {whatsapp && (
+                  <a
+                    href={`https://wa.me/${whatsapp.replace(/\D/g, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2.5 text-sm text-[#6E6E73] hover:text-green-600 transition-colors group"
+                  >
+                    <span className="w-7 h-7 rounded-lg bg-[#E8E8ED] group-hover:bg-green-100 flex items-center justify-center transition-colors shrink-0">
+                      <MessageCircle className="w-3.5 h-3.5" />
+                    </span>
+                    WhatsApp
+                  </a>
+                )}
+                {!email && !phone && !whatsapp && (
+                  <Link href="/consultation" className="text-sm text-[#6E6E73] hover:text-[#1D1D1F] transition-colors">
+                    Book a free consultation →
+                  </Link>
+                )}
               </div>
             </div>
           </div>

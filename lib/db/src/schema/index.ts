@@ -16,3 +16,4 @@ export * from "./projectAssignments";
 export * from "./payments";
 export * from "./auditLogs";
 export * from "./sessions";
+export * from "./siteSettings";

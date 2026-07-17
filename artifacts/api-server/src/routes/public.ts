@@ -12,7 +12,13 @@ import {
   meetingBookingsTable,
   applicantsTable,
   interviewBookingsTable,
+  siteSettingsTable,
 } from "@workspace/db";
+import {
+  sendEmail,
+  clientInquiryConfirmationEmail,
+  freelancerApplicationConfirmationEmail,
+} from "../lib/email";
 import {
   ListPublicServicesResponse,
   ListPublicServicePlansResponse,
@@ -102,6 +108,13 @@ router.get("/public/interview-slots", async (req, res) => {
   res.json(ListPublicInterviewSlotsResponse.parse(rows.filter((r) => r.booked < r.capacity)));
 });
 
+router.get("/public/site-settings", async (_req, res) => {
+  const rows = await db.select().from(siteSettingsTable);
+  const settings: Record<string, string> = {};
+  for (const row of rows) settings[row.key] = row.value;
+  res.json(settings);
+});
+
 router.post("/public/inquiries", async (req, res) => {
   const body = CreateInquiryBody.parse(req.body);
   const [inquiry] = await db
@@ -117,6 +130,12 @@ router.post("/public/inquiries", async (req, res) => {
       servicePlanId: body.servicePlanId,
     })
     .returning();
+  // Send confirmation email (non-blocking)
+  sendEmail(
+    inquiry.email,
+    "We've Received Your Quote Request — Trivinex Partners",
+    clientInquiryConfirmationEmail(inquiry.name, inquiry.serviceNeeded),
+  ).catch(() => {});
   res.status(201).json(CreateInquiryResponse.parse(inquiry));
 });
 
@@ -165,6 +184,12 @@ router.post("/public/applicants", async (req, res) => {
       resumeUrl: body.resumeUrl,
     })
     .returning();
+  // Send confirmation email (non-blocking)
+  sendEmail(
+    applicant.email,
+    "Your Application Has Been Received — Trivinex Partners",
+    freelancerApplicationConfirmationEmail(applicant.fullName, applicant.serviceCategory),
+  ).catch(() => {});
   res.status(201).json(CreateApplicantResponse.parse(applicant));
 });
 
