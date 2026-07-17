@@ -10,6 +10,7 @@ import { EmployeeLayout } from '@/components/layout/EmployeeLayout';
 
 import Home from '@/pages/public/Home';
 import Services from '@/pages/public/Services';
+import ServiceDetail from '@/pages/public/ServiceDetail';
 import Portfolio from '@/pages/public/Portfolio';
 import About from '@/pages/public/About';
 import Quote from '@/pages/public/Quote';
@@ -43,6 +44,7 @@ function Router() {
     <Switch>
       <Route path="/" component={() => <PublicLayout><Home /></PublicLayout>} />
       <Route path="/services" component={() => <PublicLayout><Services /></PublicLayout>} />
+      <Route path="/services/:slug" component={() => <PublicLayout><ServiceDetail /></PublicLayout>} />
       <Route path="/portfolio" component={() => <PublicLayout><Portfolio /></PublicLayout>} />
       <Route path="/about" component={() => <PublicLayout><About /></PublicLayout>} />
       <Route path="/quote" component={() => <PublicLayout><Quote /></PublicLayout>} />
