@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -40,11 +40,54 @@ import EmployeeAccount from '@/pages/employee/Account';
 
 const queryClient = new QueryClient();
 
-function ScrollToTop() {
+// Scroll positions keyed by path — shared across renders via module scope
+const savedScrollPositions = new Map<string, number>();
+
+function ScrollManager() {
   const [location] = useLocation();
+  const prevLocation = useRef(location);
+  const isPopNavigation = useRef(false);
+
+  // Disable the browser's built-in scroll restoration so we control it fully
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+
+    const onPopState = () => {
+      // Save position of current page before browser changes location
+      savedScrollPositions.set(prevLocation.current, window.scrollY);
+      isPopNavigation.current = true;
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  useEffect(() => {
+    if (location === prevLocation.current) return;
+
+    if (!isPopNavigation.current) {
+      // Forward / link navigation — save current position then go to top
+      savedScrollPositions.set(prevLocation.current, window.scrollY);
+    }
+
+    prevLocation.current = location;
+
+    if (isPopNavigation.current) {
+      isPopNavigation.current = false;
+      const saved = savedScrollPositions.get(location) ?? 0;
+      // Two rAFs: first lets React commit the new route, second ensures paint
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() =>
+          window.scrollTo({ top: saved, behavior: 'instant' })
+        )
+      );
+    } else {
+      // New page — always start from top
+      requestAnimationFrame(() =>
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+      );
+    }
   }, [location]);
+
   return null;
 }
 
@@ -91,7 +134,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-          <ScrollToTop />
+          <ScrollManager />
           <Router />
         </WouterRouter>
         <Toaster />
