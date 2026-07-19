@@ -22,12 +22,12 @@ function useTilt() {
 }
 
 const services = [
-  { icon: Code, title: "Web Development", desc: "Custom, scalable web applications engineered for performance and delight.", color: "from-blue-500 to-blue-600" },
-  { icon: Video, title: "Video Editing", desc: "Professional post-production, color grading, and dynamic motion graphics.", color: "from-purple-500 to-purple-600" },
-  { icon: Camera, title: "Photography", desc: "High-end commercial, portrait, and product photography with precision lighting.", color: "from-pink-500 to-rose-600" },
-  { icon: Palette, title: "Graphic Design", desc: "Brand identity systems, intuitive UI/UX, and striking marketing collateral.", color: "from-orange-500 to-amber-600" },
-  { icon: PenTool, title: "Content Writing", desc: "Engaging copy, technical docs, and compelling brand storytelling.", color: "from-green-500 to-emerald-600" },
-  { icon: TrendingUp, title: "SEO & Marketing", desc: "Data-driven organic strategies and measurable digital growth campaigns.", color: "from-cyan-500 to-teal-600" },
+  { icon: Code, title: "Web Development", slug: "web-development", desc: "Custom, scalable web applications engineered for performance and delight.", color: "from-blue-500 to-blue-600" },
+  { icon: Video, title: "Video Editing", slug: "video-editing", desc: "Professional post-production, color grading, and dynamic motion graphics.", color: "from-purple-500 to-purple-600" },
+  { icon: Camera, title: "Photography", slug: "photography-videography", desc: "High-end commercial, portrait, and product photography with precision lighting.", color: "from-pink-500 to-rose-600" },
+  { icon: Palette, title: "Graphic Design", slug: "graphic-design", desc: "Brand identity systems, intuitive UI/UX, and striking marketing collateral.", color: "from-orange-500 to-amber-600" },
+  { icon: PenTool, title: "Content Writing", slug: "content-writing", desc: "Engaging copy, technical docs, and compelling brand storytelling.", color: "from-green-500 to-emerald-600" },
+  { icon: TrendingUp, title: "SEO & Marketing", slug: "seo-digital-marketing", desc: "Data-driven organic strategies and measurable digital growth campaigns.", color: "from-cyan-500 to-teal-600" },
 ];
 
 function usePublicSettings() {
@@ -48,7 +48,7 @@ function ServiceCard({ service, index }: { service: typeof services[0]; index: n
       transition={{ delay: index * 0.08, duration: 0.5, ease: [0.21, 0.47, 0.32, 0.98] }}
       style={{ perspective: 1000 }}
     >
-      <Link href="/services">
+      <Link href={`/services/${service.slug}`}>
         <motion.div
           ref={ref}
           style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}

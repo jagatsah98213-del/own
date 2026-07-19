@@ -127,8 +127,14 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-[#6E6E73] mb-4">Services</p>
               <div className="flex flex-col gap-2.5">
-                {["Web Development", "Video Editing", "Graphic Design", "Photography", "SEO & Marketing"].map(s => (
-                  <Link key={s} href="/services" className="text-sm text-[#6E6E73] hover:text-[#1D1D1F] transition-colors">{s}</Link>
+                {[
+                  { label: "Web Development", slug: "web-development" },
+                  { label: "Video Editing", slug: "video-editing" },
+                  { label: "Graphic Design", slug: "graphic-design" },
+                  { label: "Photography", slug: "photography-videography" },
+                  { label: "SEO & Marketing", slug: "seo-digital-marketing" },
+                ].map(s => (
+                  <Link key={s.slug} href={`/services/${s.slug}`} className="text-sm text-[#6E6E73] hover:text-[#1D1D1F] transition-colors">{s.label}</Link>
                 ))}
               </div>
             </div>

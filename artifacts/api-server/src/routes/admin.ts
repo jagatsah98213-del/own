@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
 import { and, desc, eq, gte, ilike, inArray, or, sql } from "drizzle-orm";
+import { z } from "zod";
 import {
   db,
   applicantsTable,
@@ -21,6 +22,7 @@ import {
   faqsTable,
   auditLogsTable,
   siteSettingsTable,
+  weeklyScheduleRulesTable,
 } from "@workspace/db";
 import {
   GetAdminDashboardResponse,
@@ -387,7 +389,18 @@ router.get("/admin/employees", async (_req, res) => {
 });
 
 router.post("/admin/employees", async (req, res) => {
-  const body = CreateAdminEmployeeBody.parse(req.body);
+  // Use a permissive schema so phone is optional (the OpenAPI spec marks it required but we allow empty)
+  const employeeInputSchema = z.object({
+    fullName: z.string().min(1, "Full name required"),
+    email: z.string().email("Valid email required"),
+    phone: z.string().optional().default(""),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    serviceCategory: z.enum([
+      "WEB_DEVELOPMENT", "VIDEO_EDITING", "PHOTOGRAPHY_VIDEOGRAPHY",
+      "GRAPHIC_DESIGN", "CONTENT_WRITING", "SEO_DIGITAL_MARKETING",
+    ]),
+  });
+  const body = employeeInputSchema.parse(req.body);
   const [existingUser] = await db.select().from(usersTable).where(eq(usersTable.email, body.email.toLowerCase()));
   if (existingUser) {
     res.status(409).json({ message: "A user with this email already exists" });
@@ -785,6 +798,69 @@ router.patch("/admin/site-settings/:key", async (req, res) => {
   }
   await recordAuditLog(String(req.session.userId), "site_settings.update", { key, value });
   res.json(updated);
+});
+
+// ---------- Weekly schedule rules ----------
+
+router.get("/admin/schedule-rules", async (_req, res) => {
+  const rules = await db.select().from(weeklyScheduleRulesTable).orderBy(weeklyScheduleRulesTable.dayOfWeek, weeklyScheduleRulesTable.startTime);
+  res.json(rules);
+});
+
+router.post("/admin/schedule-rules", async (req, res) => {
+  const body = z.object({
+    dayOfWeek: z.coerce.number().int().min(0).max(6),
+    startTime: z.string().min(1),
+    meetLink: z.string().optional(),
+  }).parse(req.body);
+  const [rule] = await db.insert(weeklyScheduleRulesTable).values(body).returning();
+  res.status(201).json(rule);
+});
+
+router.delete("/admin/schedule-rules/:id", async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  await db.delete(weeklyScheduleRulesTable).where(eq(weeklyScheduleRulesTable.id, id));
+  res.status(204).end();
+});
+
+// Apply schedule rules: generate slots for next 8 weeks from current rules
+router.post("/admin/schedule-rules/apply", async (req, res) => {
+  const rules = await db.select().from(weeklyScheduleRulesTable);
+  if (rules.length === 0) { res.json({ created: 0 }); return; }
+
+  // Build set of existing (date, startTime) for CLIENT_MEETING to avoid duplicates
+  const today = new Date();
+  const eightWeeksOut = new Date(today.getTime() + 56 * 24 * 60 * 60 * 1000);
+  const existing = await db.select({ date: slotsTable.date, startTime: slotsTable.startTime })
+    .from(slotsTable)
+    .where(and(
+      eq(slotsTable.purpose, "CLIENT_MEETING"),
+      gte(slotsTable.date, today.toISOString().slice(0, 10)),
+    ));
+  const existingSet = new Set(existing.map(s => `${s.date}|${s.startTime}`));
+
+  const toInsert: { purpose: "CLIENT_MEETING"; date: string; startTime: string; capacity: number; meetLink?: string }[] = [];
+
+  for (const rule of rules) {
+    // Walk every day from today to 8 weeks out
+    const cursor = new Date(today);
+    while (cursor <= eightWeeksOut) {
+      if (cursor.getDay() === rule.dayOfWeek) {
+        const dateStr = cursor.toISOString().slice(0, 10);
+        const key = `${dateStr}|${rule.startTime}`;
+        if (!existingSet.has(key)) {
+          toInsert.push({ purpose: "CLIENT_MEETING", date: dateStr, startTime: rule.startTime, capacity: 1, ...(rule.meetLink ? { meetLink: rule.meetLink } : {}) });
+          existingSet.add(key);
+        }
+      }
+      cursor.setDate(cursor.getDate() + 1);
+    }
+  }
+
+  if (toInsert.length > 0) {
+    await db.insert(slotsTable).values(toInsert);
+  }
+  res.json({ created: toInsert.length });
 });
 
 // ---------- Audit logs ----------
