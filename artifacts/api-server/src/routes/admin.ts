@@ -339,6 +339,16 @@ router.post("/admin/meeting-slots", async (req, res) => {
   res.status(201).json(CreateAdminMeetingSlotResponse.parse(slot));
 });
 
+router.delete("/admin/meeting-slots/:id", async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) { res.status(400).json({ message: "Invalid slot id" }); return; }
+  // Prevent deleting a slot that already has a booking
+  const [booked] = await db.select().from(meetingBookingsTable).where(eq(meetingBookingsTable.slotId, id));
+  if (booked) { res.status(409).json({ message: "Cannot delete a slot that has an active booking" }); return; }
+  await db.delete(slotsTable).where(eq(slotsTable.id, id));
+  res.status(204).end();
+});
+
 router.patch("/admin/meeting-slots/:id", async (req, res) => {
   const params = UpdateAdminMeetingSlotParams.parse(req.params);
   const body = UpdateAdminMeetingSlotBody.parse(req.body);

@@ -77,6 +77,18 @@ export default function Consultations() {
   const { data: bookings, isLoading: loadingBookings } = useListAdminMeetingBookings();
   const { data: slots, isLoading: loadingSlots } = useListAdminMeetingSlots();
   const createSlot = useCreateAdminMeetingSlot();
+
+  const deleteSlotMutation = useMutation({
+    mutationFn: (id: number) =>
+      fetch(`/api/admin/meeting-slots/${id}`, { method: "DELETE", credentials: "include" }).then(async r => {
+        if (!r.ok) { const body = await r.json().catch(() => ({})); throw new Error((body as any)?.message || "Failed to delete slot"); }
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: getListAdminMeetingSlotsQueryKey() });
+      toast({ title: "Slot deleted" });
+    },
+    onError: (err: any) => toast({ variant: "destructive", title: "Cannot delete", description: err.message }),
+  });
   const updateBooking = useUpdateAdminMeetingBooking();
   const qc = useQueryClient();
   const { toast } = useToast();
@@ -297,7 +309,7 @@ export default function Consultations() {
                   <div className="text-center py-8 text-muted-foreground text-sm">No slots created yet. Add a custom slot or generate from your default schedule.</div>
                 ) : (
                   slots?.map((slot) => (
-                    <div key={slot.id} className="flex justify-between items-center p-3 border border-border rounded-xl bg-muted/20">
+                    <div key={slot.id} className="flex justify-between items-center p-3 border border-border rounded-xl bg-muted/20 group">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
                           <Clock className="w-4 h-4" />
@@ -307,9 +319,23 @@ export default function Consultations() {
                           <div className="text-xs text-muted-foreground font-medium">{slot.startTime}</div>
                         </div>
                       </div>
-                      {slot.booked > 0
-                        ? <Badge variant="secondary" className="text-xs shrink-0">Booked</Badge>
-                        : <Badge variant="outline" className="text-xs border-green-500/30 text-green-600 bg-green-500/10 shrink-0">Open</Badge>}
+                      <div className="flex items-center gap-2 shrink-0">
+                        {slot.booked > 0
+                          ? <Badge variant="secondary" className="text-xs">Booked</Badge>
+                          : <Badge variant="outline" className="text-xs border-green-500/30 text-green-600 bg-green-500/10">Open</Badge>}
+                        {slot.booked === 0 && (
+                          <button
+                            onClick={() => deleteSlotMutation.mutate(slot.id)}
+                            disabled={deleteSlotMutation.isPending}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity w-7 h-7 rounded-lg flex items-center justify-center hover:bg-destructive/10 text-destructive"
+                            title="Delete slot"
+                          >
+                            {deleteSlotMutation.isPending
+                              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              : <Trash2 className="w-3.5 h-3.5" />}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))
                 )}
