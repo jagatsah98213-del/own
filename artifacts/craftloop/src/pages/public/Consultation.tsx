@@ -48,7 +48,7 @@ export default function Consultation() {
   // Compute which calendar days have available slots
   const availableDates = useMemo(() => {
     if (!allSlots) return new Set<string>();
-    return new Set(allSlots.map((s: any) => s.date as string));
+    return new Set(allSlots.map((s: any) => format(parseISO(s.date as string), "yyyy-MM-dd")));
   }, [allSlots]);
 
   // Slots for the selected date
