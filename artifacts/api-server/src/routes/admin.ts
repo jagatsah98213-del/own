@@ -1,20 +1,13 @@
 import { Router, type IRouter } from "express";
-import bcrypt from "bcryptjs";
-import crypto from "node:crypto";
-import { and, desc, eq, gte, ilike, inArray, or, sql } from "drizzle-orm";
-import { z } from "zod";
+import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import {
   db,
   applicantsTable,
   interviewBookingsTable,
   meetingBookingsTable,
   slotsTable,
-  employeesTable,
-  usersTable,
   clientInquiriesTable,
   projectsTable,
-  projectAssignmentsTable,
-  paymentsTable,
   servicesTable,
   servicePlansTable,
   portfolioItemsTable,
@@ -33,8 +26,6 @@ import {
   UpdateAdminApplicantParams,
   UpdateAdminApplicantBody,
   UpdateAdminApplicantResponse,
-  SelectApplicantParams,
-  SelectApplicantResponse,
   RejectApplicantParams,
   RejectApplicantResponse,
   ListAdminInterviewSlotsResponse,
@@ -53,12 +44,6 @@ import {
   UpdateAdminMeetingBookingParams,
   UpdateAdminMeetingBookingBody,
   UpdateAdminMeetingBookingResponse,
-  ListAdminEmployeesResponse,
-  CreateAdminEmployeeBody,
-  CreateAdminEmployeeResponse,
-  UpdateAdminEmployeeParams,
-  UpdateAdminEmployeeBody,
-  UpdateAdminEmployeeResponse,
   ListAdminInquiriesResponse,
   UpdateAdminInquiryParams,
   UpdateAdminInquiryBody,
@@ -72,15 +57,6 @@ import {
   UpdateAdminProjectParams,
   UpdateAdminProjectBody,
   UpdateAdminProjectResponse,
-  CreateAdminProjectAssignmentParams,
-  CreateAdminProjectAssignmentBody,
-  CreateAdminProjectAssignmentResponse,
-  ListAdminPaymentsResponse,
-  CreateAdminPaymentBody,
-  CreateAdminPaymentResponse,
-  UpdateAdminPaymentParams,
-  UpdateAdminPaymentBody,
-  UpdateAdminPaymentResponse,
   ListAdminServicesResponse,
   CreateAdminServiceBody,
   CreateAdminServiceResponse,
@@ -119,10 +95,6 @@ const router: IRouter = Router();
 
 router.use("/admin", requireRole("ADMIN"));
 
-function generateTempPassword(): string {
-  return crypto.randomBytes(9).toString("base64url");
-}
-
 // ---------- Dashboard ----------
 
 router.get("/admin/dashboard", async (_req, res) => {
@@ -132,7 +104,6 @@ router.get("/admin/dashboard", async (_req, res) => {
     [newApplicants],
     [interviewsThisWeek],
     [activeProjects],
-    [pendingPayouts],
     [newInquiries],
     [upcomingConsultations],
     applicantsByStatusRows,
@@ -150,10 +121,6 @@ router.get("/admin/dashboard", async (_req, res) => {
     db.select({ count: sql<number>`count(*)::int` })
       .from(projectsTable)
       .where(eq(projectsTable.status, "in_progress")),
-
-    db.select({ count: sql<number>`count(*)::int` })
-      .from(paymentsTable)
-      .where(eq(paymentsTable.status, "pending")),
 
     db.select({ count: sql<number>`count(*)::int` })
       .from(clientInquiriesTable)
@@ -177,7 +144,6 @@ router.get("/admin/dashboard", async (_req, res) => {
       newApplicants: newApplicants?.count ?? 0,
       interviewsThisWeek: interviewsThisWeek?.count ?? 0,
       activeProjects: activeProjects?.count ?? 0,
-      pendingPayouts: pendingPayouts?.count ?? 0,
       newInquiries: newInquiries?.count ?? 0,
       upcomingConsultations: upcomingConsultations?.count ?? 0,
       applicantsByStatus: Object.fromEntries(applicantsByStatusRows.map((r) => [r.status, r.count])),
@@ -226,47 +192,6 @@ router.patch("/admin/applicants/:id", async (req, res) => {
   }
   await recordAuditLog(String(req.session.userId), "applicant.update", { applicantId: params.id, ...body });
   res.json(UpdateAdminApplicantResponse.parse(updated));
-});
-
-router.post("/admin/applicants/:id/select", async (req, res) => {
-  const params = SelectApplicantParams.parse(req.params);
-  const [applicant] = await db.select().from(applicantsTable).where(eq(applicantsTable.id, params.id));
-  if (!applicant) {
-    res.status(404).json({ message: "Applicant not found" });
-    return;
-  }
-
-  const [existingUser] = await db.select().from(usersTable).where(eq(usersTable.email, applicant.email.toLowerCase()));
-  if (existingUser) {
-    res.status(409).json({ message: "A user with this email already exists" });
-    return;
-  }
-
-  const temporaryPassword = generateTempPassword();
-  const passwordHash = await bcrypt.hash(temporaryPassword, 10);
-
-  const [user] = await db
-    .insert(usersTable)
-    .values({ email: applicant.email.toLowerCase(), passwordHash, role: "EMPLOYEE", mustChangePassword: "true" })
-    .returning();
-
-  const [employee] = await db
-    .insert(employeesTable)
-    .values({
-      applicantId: applicant.id,
-      userId: user.id,
-      fullName: applicant.fullName,
-      email: applicant.email,
-      phone: applicant.phone,
-      serviceCategory: applicant.serviceCategory,
-      payoutMethod: applicant.preferredPayout ?? undefined,
-    })
-    .returning();
-
-  await db.update(applicantsTable).set({ status: "selected" }).where(eq(applicantsTable.id, applicant.id));
-  await recordAuditLog(String(req.session.userId), "applicant.select", { applicantId: applicant.id, employeeId: employee.id });
-
-  res.json(SelectApplicantResponse.parse({ employee, temporaryPassword }));
 });
 
 router.post("/admin/applicants/:id/reject", async (req, res) => {
@@ -391,69 +316,6 @@ router.patch("/admin/meeting-bookings/:id", async (req, res) => {
   res.json(UpdateAdminMeetingBookingResponse.parse({ ...updated, slot }));
 });
 
-// ---------- Employees ----------
-
-router.get("/admin/employees", async (_req, res) => {
-  const rows = await db.select().from(employeesTable).orderBy(desc(employeesTable.createdAt));
-  res.json(ListAdminEmployeesResponse.parse(rows));
-});
-
-router.post("/admin/employees", async (req, res) => {
-  // Use a permissive schema so phone is optional (the OpenAPI spec marks it required but we allow empty)
-  const employeeInputSchema = z.object({
-    fullName: z.string().min(1, "Full name required"),
-    email: z.string().email("Valid email required"),
-    phone: z.string().optional().default(""),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    serviceCategory: z.enum([
-      "WEB_DEVELOPMENT", "VIDEO_EDITING", "PHOTOGRAPHY_VIDEOGRAPHY",
-      "GRAPHIC_DESIGN", "CONTENT_WRITING", "SEO_DIGITAL_MARKETING",
-    ]),
-  });
-  const body = employeeInputSchema.parse(req.body);
-  const [existingUser] = await db.select().from(usersTable).where(eq(usersTable.email, body.email.toLowerCase()));
-  if (existingUser) {
-    res.status(409).json({ message: "A user with this email already exists" });
-    return;
-  }
-
-  const passwordHash = await bcrypt.hash(body.password, 10);
-  const [user] = await db
-    .insert(usersTable)
-    .values({ email: body.email.toLowerCase(), passwordHash, role: "EMPLOYEE" })
-    .returning();
-
-  const [employee] = await db
-    .insert(employeesTable)
-    .values({
-      userId: user.id,
-      fullName: body.fullName,
-      email: body.email,
-      phone: body.phone ?? "",
-      serviceCategory: body.serviceCategory,
-    })
-    .returning();
-
-  await recordAuditLog(String(req.session.userId), "employee.create", { employeeId: employee.id });
-  res.status(201).json(CreateAdminEmployeeResponse.parse({ employee, temporaryPassword: body.password }));
-});
-
-router.patch("/admin/employees/:id", async (req, res) => {
-  const params = UpdateAdminEmployeeParams.parse(req.params);
-  const body = UpdateAdminEmployeeBody.parse(req.body);
-  const [updated] = await db
-    .update(employeesTable)
-    .set(body)
-    .where(eq(employeesTable.id, params.id))
-    .returning();
-  if (!updated) {
-    res.status(404).json({ message: "Employee not found" });
-    return;
-  }
-  await recordAuditLog(String(req.session.userId), "employee.update", { employeeId: params.id, ...body });
-  res.json(UpdateAdminEmployeeResponse.parse(updated));
-});
-
 // ---------- Client inquiries ----------
 
 router.get("/admin/inquiries", async (_req, res) => {
@@ -532,58 +394,6 @@ router.patch("/admin/projects/:id", async (req, res) => {
     return;
   }
   res.json(UpdateAdminProjectResponse.parse(updated));
-});
-
-router.post("/admin/projects/:id/assignments", async (req, res) => {
-  const params = CreateAdminProjectAssignmentParams.parse(req.params);
-  const body = CreateAdminProjectAssignmentBody.parse(req.body);
-  const [project] = await db.select().from(projectsTable).where(eq(projectsTable.id, params.id));
-  if (!project) {
-    res.status(404).json({ message: "Project not found" });
-    return;
-  }
-  const [assignment] = await db
-    .insert(projectAssignmentsTable)
-    .values({ projectId: params.id, employeeId: body.employeeId })
-    .returning();
-  await recordAuditLog(String(req.session.userId), "project.assign", { projectId: params.id, employeeId: body.employeeId });
-  res.status(201).json(CreateAdminProjectAssignmentResponse.parse({ ...assignment, project }));
-});
-
-// ---------- Payments ----------
-
-router.get("/admin/payments", async (_req, res) => {
-  const rows = await db
-    .select({ payment: paymentsTable, project: projectsTable })
-    .from(paymentsTable)
-    .innerJoin(projectsTable, eq(paymentsTable.projectId, projectsTable.id))
-    .orderBy(desc(paymentsTable.createdAt));
-  res.json(ListAdminPaymentsResponse.parse(rows.map((r) => ({ ...r.payment, project: r.project }))));
-});
-
-router.post("/admin/payments", async (req, res) => {
-  const body = CreateAdminPaymentBody.parse(req.body);
-  const [payment] = await db.insert(paymentsTable).values(body).returning();
-  const [project] = await db.select().from(projectsTable).where(eq(projectsTable.id, payment.projectId));
-  await recordAuditLog(String(req.session.userId), "payment.create", { paymentId: payment.id });
-  res.status(201).json(CreateAdminPaymentResponse.parse({ ...payment, project }));
-});
-
-router.patch("/admin/payments/:id", async (req, res) => {
-  const params = UpdateAdminPaymentParams.parse(req.params);
-  const body = UpdateAdminPaymentBody.parse(req.body);
-  const [updated] = await db
-    .update(paymentsTable)
-    .set({ ...body, paidAt: body.status === "paid" ? new Date() : undefined })
-    .where(eq(paymentsTable.id, params.id))
-    .returning();
-  if (!updated) {
-    res.status(404).json({ message: "Payment not found" });
-    return;
-  }
-  const [project] = await db.select().from(projectsTable).where(eq(projectsTable.id, updated.projectId));
-  await recordAuditLog(String(req.session.userId), "payment.update", { paymentId: params.id, ...body });
-  res.json(UpdateAdminPaymentResponse.parse({ ...updated, project }));
 });
 
 // ---------- Services ----------

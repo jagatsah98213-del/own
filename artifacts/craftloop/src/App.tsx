@@ -7,7 +7,6 @@ import { Route, Switch, Router as WouterRouter, useLocation } from 'wouter';
 
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { AdminLayout } from '@/components/layout/AdminLayout';
-import { EmployeeLayout } from '@/components/layout/EmployeeLayout';
 
 import Home from '@/pages/public/Home';
 import Services from '@/pages/public/Services';
@@ -24,19 +23,11 @@ import Login from '@/pages/auth/Login';
 
 import AdminDashboard from '@/pages/admin/Dashboard';
 import AdminApplicants from '@/pages/admin/Applicants';
-import AdminEmployees from '@/pages/admin/Employees';
 import AdminInquiries from '@/pages/admin/Inquiries';
 import AdminConsultations from '@/pages/admin/Consultations';
 import AdminProjects from '@/pages/admin/Projects';
-import AdminPayments from '@/pages/admin/Payments';
 import AdminSiteContent from '@/pages/admin/SiteContent';
 import AdminAuditLog from '@/pages/admin/AuditLog';
-
-import EmployeeDashboard from '@/pages/employee/Dashboard';
-import EmployeeProjects from '@/pages/employee/Projects';
-import EmployeePayoutSettings from '@/pages/employee/PayoutSettings';
-import EmployeePaymentHistory from '@/pages/employee/PaymentHistory';
-import EmployeeAccount from '@/pages/employee/Account';
 
 const queryClient = new QueryClient();
 
@@ -106,23 +97,14 @@ function Router() {
       <Route path="/freelancers" component={() => <PublicLayout><Freelancers /></PublicLayout>} />
       
       <Route path="/admin/login" component={() => <Login type="admin" />} />
-      <Route path="/employee/login" component={() => <Login type="employee" />} />
 
       <Route path="/admin" component={() => <AdminLayout><AdminDashboard /></AdminLayout>} />
       <Route path="/admin/applicants" component={() => <AdminLayout><AdminApplicants /></AdminLayout>} />
-      <Route path="/admin/employees" component={() => <AdminLayout><AdminEmployees /></AdminLayout>} />
       <Route path="/admin/inquiries" component={() => <AdminLayout><AdminInquiries /></AdminLayout>} />
       <Route path="/admin/consultations" component={() => <AdminLayout><AdminConsultations /></AdminLayout>} />
       <Route path="/admin/projects" component={() => <AdminLayout><AdminProjects /></AdminLayout>} />
-      <Route path="/admin/payments" component={() => <AdminLayout><AdminPayments /></AdminLayout>} />
       <Route path="/admin/site-content" component={() => <AdminLayout><AdminSiteContent /></AdminLayout>} />
       <Route path="/admin/audit-log" component={() => <AdminLayout><AdminAuditLog /></AdminLayout>} />
-
-      <Route path="/employee" component={() => <EmployeeLayout><EmployeeDashboard /></EmployeeLayout>} />
-      <Route path="/employee/projects" component={() => <EmployeeLayout><EmployeeProjects /></EmployeeLayout>} />
-      <Route path="/employee/payout-settings" component={() => <EmployeeLayout><EmployeePayoutSettings /></EmployeeLayout>} />
-      <Route path="/employee/payment-history" component={() => <EmployeeLayout><EmployeePaymentHistory /></EmployeeLayout>} />
-      <Route path="/employee/account" component={() => <EmployeeLayout><EmployeeAccount /></EmployeeLayout>} />
 
       <Route component={NotFound} />
     </Switch>

@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { useLogout, useGetCurrentUser } from "@workspace/api-client-react";
 import { 
   LayoutDashboard, Users, FileText, Calendar, 
-  FolderKanban, CreditCard, Settings, History,
-  LogOut, Briefcase, Menu
+  FolderKanban, Settings, History,
+  LogOut, Menu
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -38,11 +38,9 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const navItems = [
     { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
     { href: "/admin/applicants", icon: Users, label: "Applicants & Interviews" },
-    { href: "/admin/employees", icon: Briefcase, label: "Employees" },
     { href: "/admin/inquiries", icon: FileText, label: "Client Inquiries" },
     { href: "/admin/consultations", icon: Calendar, label: "Consultations" },
     { href: "/admin/projects", icon: FolderKanban, label: "Projects" },
-    { href: "/admin/payments", icon: CreditCard, label: "Payments" },
     { href: "/admin/site-content", icon: Settings, label: "Site Content" },
     { href: "/admin/audit-log", icon: History, label: "Audit Log" },
   ];

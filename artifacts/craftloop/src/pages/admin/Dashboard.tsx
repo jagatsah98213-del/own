@@ -1,5 +1,5 @@
 import { useGetAdminDashboard } from "@workspace/api-client-react";
-import { Loader2, Users, FolderKanban, Banknote, Calendar, MessageSquare, Briefcase } from "lucide-react";
+import { Loader2, Users, FolderKanban, Calendar, MessageSquare, Briefcase } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Dashboard() {
@@ -50,15 +50,6 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-black">{stats.activeProjects}</div>
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-bold text-muted-foreground">Pending Payouts</CardTitle>
-            <Banknote className="w-4 h-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-black">{stats.pendingPayouts}</div>
           </CardContent>
         </Card>
         <Card className="shadow-sm">

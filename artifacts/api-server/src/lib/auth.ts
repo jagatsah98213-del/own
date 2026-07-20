@@ -8,7 +8,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
-export function requireRole(role: "ADMIN" | "EMPLOYEE") {
+export function requireRole(role: "ADMIN") {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.session.userId) {
       res.status(401).json({ message: "Not authenticated" });
@@ -20,11 +20,4 @@ export function requireRole(role: "ADMIN" | "EMPLOYEE") {
     }
     next();
   };
-}
-
-export function requireEmployeeId(req: Request): number {
-  if (!req.session.employeeId) {
-    throw new Error("requireEmployeeId called without an employee session");
-  }
-  return req.session.employeeId;
 }

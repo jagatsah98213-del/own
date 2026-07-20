@@ -1,23 +1,21 @@
 import { useState } from "react";
-import { useListAdminApplicants, useSelectApplicant, useRejectApplicant, getListAdminApplicantsQueryKey, useListAdminInterviewSlots, useCreateAdminInterviewSlot } from "@workspace/api-client-react";
-import { ApplicantStatus, ServiceCategory, Role } from "@workspace/api-client-react/api.schemas";
-import { Loader2, Search, Filter, Eye, CheckCircle, XCircle, CalendarPlus, ExternalLink } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { useListAdminApplicants, useRejectApplicant, getListAdminApplicantsQueryKey, useListAdminInterviewSlots, useCreateAdminInterviewSlot } from "@workspace/api-client-react";
+import { ServiceCategory } from "@workspace/api-client-react/api.schemas";
+import { Loader2, Eye, XCircle, ExternalLink } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Label } from "@/components/ui/label";
 
 export default function Applicants() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
-  
+
   const { data: applicants, isLoading } = useListAdminApplicants({
     status: statusFilter !== "all" ? statusFilter : undefined,
     serviceCategory: serviceFilter !== "all" ? serviceFilter as ServiceCategory : undefined,
@@ -25,28 +23,12 @@ export default function Applicants() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const selectApp = useSelectApplicant();
   const rejectApp = useRejectApplicant();
 
   const [selectedApplicant, setSelectedApplicant] = useState<number | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [hireDialogOpen, setHireDialogOpen] = useState(false);
-  const [hireResult, setHireResult] = useState<{ id: number, tempPass: string } | null>(null);
-  
-  const applicant = applicants?.find(a => a.id === selectedApplicant);
 
-  const handleHire = (id: number) => {
-    selectApp.mutate({ id }, {
-      onSuccess: (res) => {
-        setHireResult({ id: res.employee.id, tempPass: res.temporaryPassword });
-        setHireDialogOpen(true);
-        setViewDialogOpen(false);
-        queryClient.invalidateQueries({ queryKey: getListAdminApplicantsQueryKey() });
-        toast({ title: "Applicant Hired", description: "Employee account created successfully." });
-      },
-      onError: (err) => toast({ variant: "destructive", title: "Error", description: (err.data as any)?.message || err.message })
-    });
-  };
+  const applicant = applicants?.find(a => a.id === selectedApplicant);
 
   const handleReject = (id: number) => {
     rejectApp.mutate({ id }, {
@@ -64,7 +46,7 @@ export default function Applicants() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight mb-2">Applicants & Interviews</h1>
-          <p className="text-muted-foreground font-medium">Review talent applications and manage hiring.</p>
+          <p className="text-muted-foreground font-medium">Review talent applications and manage interviews.</p>
         </div>
       </div>
 
@@ -78,11 +60,10 @@ export default function Applicants() {
             <SelectItem value="applied">Applied</SelectItem>
             <SelectItem value="interview_scheduled">Interview Scheduled</SelectItem>
             <SelectItem value="interviewed">Interviewed</SelectItem>
-            <SelectItem value="selected">Hired</SelectItem>
             <SelectItem value="rejected">Rejected</SelectItem>
           </SelectContent>
         </Select>
-        
+
         <Select value={serviceFilter} onValueChange={setServiceFilter}>
           <SelectTrigger className="w-full sm:w-[250px] h-10">
             <SelectValue placeholder="All Services" />
@@ -128,7 +109,6 @@ export default function Applicants() {
                     <TableCell className="font-medium">{app.yearsExperience} yrs</TableCell>
                     <TableCell>
                       <Badge className={
-                        app.status === 'selected' ? 'bg-green-500 hover:bg-green-600' :
                         app.status === 'rejected' ? 'bg-red-500 hover:bg-red-600' :
                         app.status === 'interview_scheduled' ? 'bg-blue-500 hover:bg-blue-600' :
                         'bg-yellow-500 hover:bg-yellow-600'
@@ -169,7 +149,7 @@ export default function Applicants() {
                 </div>
                 <div>
                   <div className="text-sm font-bold text-muted-foreground mb-1">Contact</div>
-                  <div className="font-semibold">{applicant.email}<br/>{applicant.phone}</div>
+                  <div className="font-semibold">{applicant.email}<br />{applicant.phone}</div>
                 </div>
                 <div>
                   <div className="text-sm font-bold text-muted-foreground mb-1">Specialty</div>
@@ -184,8 +164,8 @@ export default function Applicants() {
                   <div className="font-semibold">{applicant.expectedRate || "N/A"}</div>
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-muted-foreground mb-1">Preferred Payout</div>
-                  <div className="font-semibold">{applicant.preferredPayout?.replace(/_/g, " ") || "N/A"}</div>
+                  <div className="text-sm font-bold text-muted-foreground mb-1">Availability</div>
+                  <div className="font-semibold">{applicant.availability || "N/A"}</div>
                 </div>
               </div>
 
@@ -195,7 +175,7 @@ export default function Applicants() {
                   <div className="flex flex-wrap gap-2">
                     {applicant.portfolioLinks.map((link, i) => (
                       <Button key={i} variant="outline" size="sm" className="h-8" onClick={() => window.open(link, "_blank")}>
-                        <ExternalLink className="w-3 h-3 mr-2" /> Link {i+1}
+                        <ExternalLink className="w-3 h-3 mr-2" /> Link {i + 1}
                       </Button>
                     ))}
                   </div>
@@ -230,41 +210,10 @@ export default function Applicants() {
                   <Button variant="destructive" onClick={() => handleReject(applicant.id)} disabled={rejectApp.isPending}>
                     <XCircle className="w-4 h-4 mr-2" /> Reject
                   </Button>
-                  <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleHire(applicant.id)} disabled={selectApp.isPending}>
-                    <CheckCircle className="w-4 h-4 mr-2" /> Hire & Create Employee
-                  </Button>
                 </div>
               )}
             </div>
           )}
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={hireDialogOpen} onOpenChange={setHireDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-green-600 flex items-center gap-2">
-              <CheckCircle className="w-6 h-6" /> Employee Hired!
-            </DialogTitle>
-            <DialogDescription className="text-base pt-2">
-              An employee account has been created. Please securely share these credentials with them.
-              <br/><br/>
-              <strong className="text-red-500">This password will only be shown once.</strong>
-            </DialogDescription>
-          </DialogHeader>
-          {hireResult && (
-            <div className="bg-muted p-6 rounded-xl border border-border space-y-4">
-              <div>
-                <div className="text-sm font-bold text-muted-foreground">Temporary Password</div>
-                <div className="text-2xl font-mono font-bold mt-1 tracking-widest bg-background px-4 py-2 rounded-lg border border-border text-center select-all">
-                  {hireResult.tempPass}
-                </div>
-              </div>
-            </div>
-          )}
-          <div className="flex justify-end mt-4">
-            <Button onClick={() => setHireDialogOpen(false)}>I have copied the password</Button>
-          </div>
         </DialogContent>
       </Dialog>
     </div>
