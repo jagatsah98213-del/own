@@ -147,7 +147,6 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
                 <Link href="/portfolio" className="text-sm text-[#6E6E73] hover:text-[#1D1D1F] transition-colors">Portfolio</Link>
                 <Link href="/testimonials" className="text-sm text-[#6E6E73] hover:text-[#1D1D1F] transition-colors">Testimonials</Link>
                 <Link href="/freelancers" className="text-sm text-[#6E6E73] hover:text-[#1D1D1F] transition-colors">Join as Freelancer</Link>
-                <Link href="/employee/login" className="text-sm text-[#6E6E73] hover:text-[#1D1D1F] transition-colors">Employee Portal</Link>
               </div>
             </div>
 

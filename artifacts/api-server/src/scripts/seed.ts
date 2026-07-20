@@ -53,6 +53,57 @@ const services = [
   },
 ];
 
+const portfolioItems = [
+  {
+    title: "Luxe Realty – Brand Website",
+    serviceCategory: "WEB_DEVELOPMENT" as const,
+    mediaType: "image" as const,
+    mediaUrl: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&q=80",
+    description: "A high-converting property listing site with animated hero and integrated CMS.",
+    sortOrder: 1, isFeatured: true,
+  },
+  {
+    title: "Pulse Festival – Event Highlight Reel",
+    serviceCategory: "VIDEO_EDITING" as const,
+    mediaType: "image" as const,
+    mediaUrl: "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=800&q=80",
+    description: "3-minute cinematic recap of a 3-day music festival, delivered in 48 hours.",
+    sortOrder: 2, isFeatured: true,
+  },
+  {
+    title: "Bloom Organics – Product Shoot",
+    serviceCategory: "PHOTOGRAPHY_VIDEOGRAPHY" as const,
+    mediaType: "image" as const,
+    mediaUrl: "https://images.unsplash.com/photo-1526045612212-70caf35c14df?w=800&q=80",
+    description: "Full e-commerce product photography catalog for a natural skincare brand.",
+    sortOrder: 3, isFeatured: true,
+  },
+  {
+    title: "Nova Fitness – Brand Identity",
+    serviceCategory: "GRAPHIC_DESIGN" as const,
+    mediaType: "image" as const,
+    mediaUrl: "https://images.unsplash.com/photo-1558655146-364adaf1fcc9?w=800&q=80",
+    description: "Complete visual identity: logo, typography system, and brand guidelines.",
+    sortOrder: 4, isFeatured: false,
+  },
+  {
+    title: "TechVault – SEO Content Strategy",
+    serviceCategory: "CONTENT_WRITING" as const,
+    mediaType: "image" as const,
+    mediaUrl: "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&q=80",
+    description: "60-article content plan driving 340% organic traffic growth in 6 months.",
+    sortOrder: 5, isFeatured: false,
+  },
+  {
+    title: "CoreMetrics – Paid Search Campaign",
+    serviceCategory: "SEO_DIGITAL_MARKETING" as const,
+    mediaType: "image" as const,
+    mediaUrl: "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&q=80",
+    description: "Google Ads + Meta campaign achieving 4.2× ROAS for a B2B SaaS product.",
+    sortOrder: 6, isFeatured: false,
+  },
+];
+
 const testimonials = [
   { clientName: "Priya Nair", quote: "Craftloop rebuilt our site in three weeks and conversions doubled.", rating: 5, isPublished: true },
   { clientName: "Marcus Webb", quote: "The video team understood our brand voice instantly.", rating: 5, isPublished: true },
@@ -122,6 +173,12 @@ async function seed() {
   if (existingTestimonials.length === 0) {
     await db.insert(testimonialsTable).values(testimonials);
     logger.info("Seeded testimonials");
+  }
+
+  const existingPortfolio = await db.select().from(portfolioItemsTable).limit(1);
+  if (existingPortfolio.length === 0) {
+    await db.insert(portfolioItemsTable).values(portfolioItems);
+    logger.info("Seeded portfolio items");
   }
 
   const adminEmail = "admin@craftloop.app";

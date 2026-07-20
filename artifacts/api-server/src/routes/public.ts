@@ -89,6 +89,17 @@ router.get("/public/testimonials", async (_req, res) => {
   res.json(ListPublicTestimonialsResponse.parse(rows));
 });
 
+router.post("/public/feedback", async (req, res) => {
+  const { z } = await import("zod");
+  const body = z.object({
+    clientName: z.string().min(2).max(100),
+    quote: z.string().min(10).max(1000),
+    rating: z.number().int().min(1).max(5),
+  }).parse(req.body);
+  const [row] = await db.insert(testimonialsTable).values({ ...body, isPublished: false }).returning();
+  res.status(201).json({ id: row.id, message: "Thank you! Your review is pending approval." });
+});
+
 router.get("/public/meeting-slots", async (_req, res) => {
   const rows = await db
     .select()
