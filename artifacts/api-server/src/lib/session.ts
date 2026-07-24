@@ -8,6 +8,8 @@ if (!process.env["SESSION_SECRET"]) {
   throw new Error("SESSION_SECRET environment variable is required but was not provided.");
 }
 
+const isProd = process.env["NODE_ENV"] === "production";
+
 export const sessionMiddleware = session({
   store: new PgSession({
     pool,
@@ -20,9 +22,9 @@ export const sessionMiddleware = session({
   name: "craftloop.sid",
   cookie: {
     httpOnly: true,
-    secure: process.env["NODE_ENV"] === "production",
-    sameSite: "lax",
-    maxAge: 1000 * 60 * 60 * 24 * 7,
+    secure: isProd,
+    sameSite: isProd ? "strict" : "lax",
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
   },
 });
 

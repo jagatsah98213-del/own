@@ -8,3 +8,6 @@
 - [Public site design system](public-design.md) — Apple-premium dark hero (#06060A) + white content sections; framer-motion for scroll animations; hardcoded Apple colors (not CSS vars) so admin portal is unaffected
 - [Service Sub-Plans feature](service-plans-feature.md) — service_plans table, nested plans in Service API, quote form plan picker, admin SiteContent CRUD panel
 - [Site Settings + Email feature](site-settings-feature.md) — site_settings table, public/admin API, nodemailer email, stats/contact editable from admin, footer contact links
+- [Workspace lib declarations](workspace-lib-build.md) — run `npx tsc -b lib/db lib/api-zod lib/api-client-react` before typechecking; libs have no build script
+- [Admin key guard pattern](admin-key-guard.md) — VITE_ADMIN_KEY (frontend) + ADMIN_ACCESS_KEY (backend); frontend redirects to / if ?key= missing/wrong
+- [Framer-motion ease type](framer-ease-type.md) — cubic bezier arrays must be typed as `[number,number,number,number]`; plain `number[]` fails TS strict mode

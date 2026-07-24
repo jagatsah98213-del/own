@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
-import { Route, Switch, Router as WouterRouter, useLocation } from 'wouter';
+import { Route, Switch, Router as WouterRouter, useLocation, Redirect } from 'wouter';
 
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { AdminLayout } from '@/components/layout/AdminLayout';
@@ -34,17 +34,36 @@ const queryClient = new QueryClient();
 // Scroll positions keyed by path — shared across renders via module scope
 const savedScrollPositions = new Map<string, number>();
 
+// Admin access key — must match VITE_ADMIN_KEY env var
+const ADMIN_KEY = import.meta.env.VITE_ADMIN_KEY as string | undefined;
+
+/** Guard: renders children only when the ?key= query param matches ADMIN_KEY.
+ *  If VITE_ADMIN_KEY is not set (dev without config), the guard is skipped. */
+function AdminKeyGuard({ children }: { children: React.ReactNode }) {
+  const [location] = useLocation();
+  const params = new URLSearchParams(
+    typeof window !== 'undefined' ? window.location.search : ''
+  );
+  const key = params.get('key');
+
+  // If no env key is configured, allow access (useful in bare dev)
+  if (!ADMIN_KEY) return <>{children}</>;
+
+  if (key !== ADMIN_KEY) {
+    return <Redirect to="/" />;
+  }
+  return <>{children}</>;
+}
+
 function ScrollManager() {
   const [location] = useLocation();
   const prevLocation = useRef(location);
   const isPopNavigation = useRef(false);
 
-  // Disable the browser's built-in scroll restoration so we control it fully
   useEffect(() => {
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
     const onPopState = () => {
-      // Save position of current page before browser changes location
       savedScrollPositions.set(prevLocation.current, window.scrollY);
       isPopNavigation.current = true;
     };
@@ -56,7 +75,6 @@ function ScrollManager() {
     if (location === prevLocation.current) return;
 
     if (!isPopNavigation.current) {
-      // Forward / link navigation — save current position then go to top
       savedScrollPositions.set(prevLocation.current, window.scrollY);
     }
 
@@ -65,14 +83,12 @@ function ScrollManager() {
     if (isPopNavigation.current) {
       isPopNavigation.current = false;
       const saved = savedScrollPositions.get(location) ?? 0;
-      // Two rAFs: first lets React commit the new route, second ensures paint
       requestAnimationFrame(() =>
         requestAnimationFrame(() =>
           window.scrollTo({ top: saved, behavior: 'instant' })
         )
       );
     } else {
-      // New page — always start from top
       requestAnimationFrame(() =>
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
       );
@@ -85,6 +101,7 @@ function ScrollManager() {
 function Router() {
   return (
     <Switch>
+      {/* ── Public ── */}
       <Route path="/" component={() => <PublicLayout><Home /></PublicLayout>} />
       <Route path="/services" component={() => <PublicLayout><Services /></PublicLayout>} />
       <Route path="/services/:slug" component={() => <PublicLayout><ServiceDetail /></PublicLayout>} />
@@ -95,9 +112,18 @@ function Router() {
       <Route path="/testimonials" component={() => <PublicLayout><Testimonials /></PublicLayout>} />
       <Route path="/careers" component={() => <PublicLayout><Careers /></PublicLayout>} />
       <Route path="/freelancers" component={() => <PublicLayout><Freelancers /></PublicLayout>} />
-      
-      <Route path="/admin/login" component={() => <Login type="admin" />} />
 
+      {/* ── Admin login — key-guarded ── */}
+      <Route
+        path="/admin/login"
+        component={() => (
+          <AdminKeyGuard>
+            <Login type="admin" />
+          </AdminKeyGuard>
+        )}
+      />
+
+      {/* ── Admin portal ── */}
       <Route path="/admin" component={() => <AdminLayout><AdminDashboard /></AdminLayout>} />
       <Route path="/admin/applicants" component={() => <AdminLayout><AdminApplicants /></AdminLayout>} />
       <Route path="/admin/inquiries" component={() => <AdminLayout><AdminInquiries /></AdminLayout>} />
@@ -106,6 +132,7 @@ function Router() {
       <Route path="/admin/site-content" component={() => <AdminLayout><AdminSiteContent /></AdminLayout>} />
       <Route path="/admin/audit-log" component={() => <AdminLayout><AdminAuditLog /></AdminLayout>} />
 
+      {/* ── 404 — redirects to home ── */}
       <Route component={NotFound} />
     </Switch>
   );

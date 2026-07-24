@@ -66,3 +66,9 @@ timeoutMs = 20000
 
 [nix]
 channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+ADMIN_ACCESS_KEY = "craftloop-admin-2026"
+VITE_ADMIN_KEY = "craftloop-admin-2026"

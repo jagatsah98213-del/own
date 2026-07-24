@@ -87,8 +87,8 @@ const fadeUp = {
   initial: { opacity: 0, y: 30 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, amount: 0.3 },
-  transition: { duration: 0.6, ease: [0.21, 0.47, 0.32, 0.98] },
-};
+  transition: { duration: 0.6, ease: [0.21, 0.47, 0.32, 0.98] as [number, number, number, number] },
+} as const satisfies Parameters<typeof motion.p>[0];
 
 export default function Freelancers() {
   const { data: apiFaqs } = useQuery<Array<{ id: number; question: string; answer: string }>>({
