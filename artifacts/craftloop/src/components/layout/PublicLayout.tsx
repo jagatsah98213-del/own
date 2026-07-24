@@ -47,14 +47,14 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
       <header
         className={`sticky top-0 z-50 w-full transition-all duration-300 ${
           scrolled
-            ? "border-b border-white/20 bg-white/70 backdrop-blur-2xl shadow-sm shadow-black/5 supports-[backdrop-filter]:bg-white/60"
-            : "border-b border-transparent bg-white/10 backdrop-blur-2xl supports-[backdrop-filter]:bg-white/5"
+            ? "border-b border-[#D2D2D7]/40 bg-white/75 backdrop-blur-2xl shadow-sm shadow-black/5 supports-[backdrop-filter]:bg-white/65"
+            : "border-b border-[#D2D2D7]/20 bg-white/55 backdrop-blur-2xl supports-[backdrop-filter]:bg-white/45"
         }`}
       >
         <div className="container mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link href="/" className="font-extrabold text-lg tracking-tighter flex items-center gap-0.5 shrink-0">
-            <span className={`transition-colors duration-300 ${scrolled ? "text-[#1D1D1F]" : "text-white"}`}>TRIVINEX</span>
-            <span className="text-blue-400"> PARTNERS</span>
+            <span className="text-[#1D1D1F]">TRIVINEX</span>
+            <span className="text-blue-600"> PARTNERS</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 lg:gap-8">
@@ -64,8 +64,8 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
                 href={href}
                 className={`text-sm font-medium transition-colors duration-200 ${
                   location === href
-                    ? scrolled ? "text-[#1D1D1F]" : "text-white"
-                    : scrolled ? "text-[#6E6E73] hover:text-[#1D1D1F]" : "text-white/70 hover:text-white"
+                    ? "text-[#1D1D1F]"
+                    : "text-[#6E6E73] hover:text-[#1D1D1F]"
                 }`}
               >
                 {label}
@@ -76,24 +76,18 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-2 sm:gap-3">
             <Link
               href="/freelancers"
-              className={`hidden md:inline-flex h-9 items-center justify-center rounded-full border px-4 lg:px-5 text-xs font-semibold transition-all duration-200 ${
-                scrolled
-                  ? "border-[#D2D2D7] text-[#1D1D1F] hover:border-blue-500 hover:text-blue-600"
-                  : "border-white/30 text-white hover:border-white hover:bg-white/10"
-              }`}
+              className="hidden md:inline-flex h-9 items-center justify-center rounded-full border border-[#D2D2D7] px-4 lg:px-5 text-xs font-semibold text-[#1D1D1F] hover:border-blue-500 hover:text-blue-600 transition-all duration-200"
             >
               Join as Freelancer
             </Link>
             <Link
               href="/quote"
-              className="inline-flex h-9 items-center justify-center rounded-full bg-blue-600 px-4 lg:px-5 text-xs font-semibold text-white hover:bg-blue-500 transition-colors duration-200 shadow-lg shadow-blue-600/25"
+              className="inline-flex h-9 items-center justify-center rounded-full bg-[#1D1D1F] px-4 lg:px-5 text-xs font-semibold text-white hover:bg-blue-600 transition-colors duration-200"
             >
               Get a Quote
             </Link>
             <button
-              className={`md:hidden p-2 rounded-xl transition-colors ${
-                scrolled ? "hover:bg-[#F5F5F7] text-[#1D1D1F]" : "hover:bg-white/10 text-white"
-              }`}
+              className="md:hidden p-2 rounded-xl hover:bg-black/5 text-[#1D1D1F] transition-colors"
               onClick={() => setMobileOpen(!mobileOpen)}
               aria-label="Toggle menu"
             >
