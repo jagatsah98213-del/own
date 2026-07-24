@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useState, useEffect } from "react";
-import { Menu, X, Phone, Mail, MessageCircle } from "lucide-react";
+import { Menu, X, Phone, Mail, MessageCircle, ArrowUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 
@@ -16,6 +16,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [showTop, setShowTop] = useState(false);
   const { data: settings = {} } = usePublicSettings();
 
   const phone = settings.contact_phone || "";
@@ -25,9 +26,12 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
   // Close mobile menu on route change
   useEffect(() => { setMobileOpen(false); }, [location]);
 
-  // Track scroll position to toggle glass opacity
+  // Track scroll for nav glass + back-to-top visibility
   useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 20);
+    const handler = () => {
+      setScrolled(window.scrollY > 20);
+      setShowTop(window.scrollY > 400);
+    };
     window.addEventListener("scroll", handler, { passive: true });
     handler();
     return () => window.removeEventListener("scroll", handler);
@@ -45,11 +49,18 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
     <div className="min-h-[100dvh] flex flex-col bg-white text-[#1D1D1F] font-sans selection:bg-blue-100">
       {/* ─── Nav ─── */}
       <header
-        className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+        className={`sticky top-0 z-50 w-full transition-all duration-500 ${
           scrolled
-            ? "border-b border-[#D2D2D7]/40 bg-white/75 backdrop-blur-2xl shadow-sm shadow-black/5 supports-[backdrop-filter]:bg-white/65"
-            : "border-b border-[#D2D2D7]/20 bg-white/55 backdrop-blur-2xl supports-[backdrop-filter]:bg-white/45"
+            ? "border-b border-black/[0.08] shadow-sm shadow-black/[0.04]"
+            : "border-b border-white/[0.12]"
         }`}
+        style={{
+          background: scrolled
+            ? "rgba(255,255,255,0.72)"
+            : "rgba(255,255,255,0.18)",
+          backdropFilter: "blur(24px) saturate(180%)",
+          WebkitBackdropFilter: "blur(24px) saturate(180%)",
+        }}
       >
         <div className="container mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link href="/" className="font-extrabold text-lg tracking-tighter flex items-center gap-0.5 shrink-0">
@@ -137,6 +148,28 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
       </header>
 
       <main className="flex-1">{children}</main>
+
+      {/* ─── Scroll to top ─── */}
+      <AnimatePresence>
+        {showTop && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 8 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            aria-label="Back to top"
+            className="fixed bottom-6 right-6 z-50 w-11 h-11 rounded-full flex items-center justify-center shadow-lg shadow-black/10 border border-black/[0.08]"
+            style={{
+              background: "rgba(255,255,255,0.72)",
+              backdropFilter: "blur(24px) saturate(180%)",
+              WebkitBackdropFilter: "blur(24px) saturate(180%)",
+            }}
+          >
+            <ArrowUp className="w-4 h-4 text-[#1D1D1F]" />
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* ─── Footer ─── */}
       <footer className="bg-[#F5F5F7] border-t border-[#E8E8ED] py-12 md:py-16">
