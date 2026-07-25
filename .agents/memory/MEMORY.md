@@ -11,3 +11,4 @@
 - [Workspace lib declarations](workspace-lib-build.md) — run `npx tsc -b lib/db lib/api-zod lib/api-client-react` before typechecking; libs have no build script
 - [Admin key guard pattern](admin-key-guard.md) — VITE_ADMIN_KEY (frontend) + ADMIN_ACCESS_KEY (backend); frontend redirects to / if ?key= missing/wrong
 - [Framer-motion ease type](framer-ease-type.md) — cubic bezier arrays must be typed as `[number,number,number,number]`; plain `number[]` fails TS strict mode
+- [Checkpoint-aware undo](checkpoint-aware-undo.md) — a completed checkpoint can make experimental changes look clean; compare against the known-good commit and restore exact files when undoing
