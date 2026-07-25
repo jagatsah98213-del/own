@@ -47,6 +47,7 @@ import type {
   ListAdminServicePlansParams,
   ListPublicInterviewSlotsParams,
   ListPublicPortfolioItemsParams,
+  LoginParams,
   MeetingBooking,
   MeetingBookingInput,
   MeetingBookingUpdate,
@@ -181,20 +182,28 @@ export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, 
 
 
 
-export const getLoginUrl = () => {
+export const getLoginUrl = (params?: LoginParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/auth/login`
+  return stringifiedParams.length > 0 ? `/api/auth/login?${stringifiedParams}` : `/api/auth/login`
 }
 
 /**
  * @summary Log in as admin or employee
  */
-export const login = async (authLoginInput: AuthLoginInput, options?: RequestInit): Promise<AuthUser> => {
+export const login = async (authLoginInput: AuthLoginInput,
+    params?: LoginParams, options?: RequestInit): Promise<AuthUser> => {
 
-  return customFetch<AuthUser>(getLoginUrl(),
+  return customFetch<AuthUser>(getLoginUrl(params),
   {
     ...options,
     method: 'POST',
@@ -208,8 +217,8 @@ export const login = async (authLoginInput: AuthLoginInput, options?: RequestIni
 
 
 export const getLoginMutationOptions = <TError = ErrorType<ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: BodyType<AuthLoginInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: BodyType<AuthLoginInput>}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: BodyType<AuthLoginInput>;params?: LoginParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: BodyType<AuthLoginInput>;params?: LoginParams}, TContext> => {
 
 const mutationKey = ['login'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -221,10 +230,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof login>>, {data: BodyType<AuthLoginInput>}> = (props) => {
-          const {data} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof login>>, {data: BodyType<AuthLoginInput>;params?: LoginParams}> = (props) => {
+          const {data,params} = props ?? {};
 
-          return  login(data,requestOptions)
+          return  login(data,params,requestOptions)
         }
 
 
@@ -242,11 +251,11 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  * @summary Log in as admin or employee
  */
 export const useLogin = <TError = ErrorType<ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: BodyType<AuthLoginInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: BodyType<AuthLoginInput>;params?: LoginParams}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof login>>,
         TError,
-        {data: BodyType<AuthLoginInput>},
+        {data: BodyType<AuthLoginInput>;params?: LoginParams},
         TContext
       > => {
       return useMutation(getLoginMutationOptions(options));

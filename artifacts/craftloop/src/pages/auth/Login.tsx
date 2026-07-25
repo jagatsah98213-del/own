@@ -35,7 +35,11 @@ export default function Login({ type }: { type: "admin" | "employee" }) {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    login.mutate({ data: values }, {
+    const key = type === "admin"
+      ? new URLSearchParams(window.location.search).get("key") ?? undefined
+      : undefined;
+
+    login.mutate({ data: values, params: key ? { key } : undefined }, {
       onSuccess: (u) => {
         if (type === "admin" && u.role !== "ADMIN") {
           toast({ variant: "destructive", title: "Unauthorized", description: "Not an admin account." });

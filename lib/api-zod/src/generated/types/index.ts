@@ -44,6 +44,7 @@ export * from './listAdminAuditLogsParams';
 export * from './listAdminServicePlansParams';
 export * from './listPublicInterviewSlotsParams';
 export * from './listPublicPortfolioItemsParams';
+export * from './loginParams';
 export * from './meetingBooking';
 export * from './meetingBookingInput';
 export * from './meetingBookingStatus';

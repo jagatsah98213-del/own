@@ -739,11 +739,19 @@ export interface AdminDashboard {
   newApplicants: number;
   interviewsThisWeek: number;
   activeProjects: number;
+  pendingPayouts: number;
   newInquiries: number;
   upcomingConsultations: number;
   applicantsByStatus: AdminDashboardApplicantsByStatus;
   projectsByStatus: AdminDashboardProjectsByStatus;
 }
+
+export type LoginParams = {
+/**
+ * Admin access key required when an admin access key is configured
+ */
+key?: string;
+};
 
 export type ListPublicPortfolioItemsParams = {
 category?: ServiceCategory;

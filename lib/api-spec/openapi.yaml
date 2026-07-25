@@ -34,6 +34,13 @@ paths:
       operationId: login
       tags: [auth]
       summary: Log in as admin or employee
+      parameters:
+        - name: key
+          in: query
+          required: false
+          description: Admin access key required when an admin access key is configured
+          schema:
+            type: string
       requestBody:
         required: true
         content:
