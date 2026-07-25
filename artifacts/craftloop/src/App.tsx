@@ -60,15 +60,31 @@ function ScrollManager() {
   const prevLocation = useRef(location);
   const isPopNavigation = useRef(false);
 
+  const saveCurrentScrollPosition = () => {
+    savedScrollPositions.set(prevLocation.current, window.scrollY);
+  };
+
   useEffect(() => {
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
     const onPopState = () => {
-      savedScrollPositions.set(prevLocation.current, window.scrollY);
+      saveCurrentScrollPosition();
       isPopNavigation.current = true;
     };
+    const onInternalLinkClick = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const target = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>('a[href]') : null;
+      if (!target || target.target === "_blank" || target.hasAttribute("download")) return;
+      const url = new URL(target.href, window.location.href);
+      if (url.origin !== window.location.origin || url.pathname === window.location.pathname && url.search === window.location.search) return;
+      saveCurrentScrollPosition();
+    };
     window.addEventListener('popstate', onPopState);
-    return () => window.removeEventListener('popstate', onPopState);
+    document.addEventListener('click', onInternalLinkClick, true);
+    return () => {
+      window.removeEventListener('popstate', onPopState);
+      document.removeEventListener('click', onInternalLinkClick, true);
+    };
   }, []);
 
   useEffect(() => {
@@ -83,11 +99,12 @@ function ScrollManager() {
     if (isPopNavigation.current) {
       isPopNavigation.current = false;
       const saved = savedScrollPositions.get(location) ?? 0;
-      requestAnimationFrame(() =>
-        requestAnimationFrame(() =>
-          window.scrollTo({ top: saved, behavior: 'instant' })
-        )
-      );
+      const restore = () => window.scrollTo({ top: saved, left: 0, behavior: 'instant' });
+      requestAnimationFrame(() => {
+        restore();
+        requestAnimationFrame(restore);
+        window.setTimeout(restore, 120);
+      });
     } else {
       requestAnimationFrame(() =>
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' })

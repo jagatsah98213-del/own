@@ -72,3 +72,8 @@ channel = "stable-25_05"
 [userenv.shared]
 ADMIN_ACCESS_KEY = "craftloop-admin-2026"
 VITE_ADMIN_KEY = "craftloop-admin-2026"
+ADMIN_EMAIL = "trivinexpartners@gmail.com"
+SMTP_FROM = "Trivinex Partners <trivinexpartners@gmail.com>"
+SMTP_HOST = "smtp.gmail.com"
+SMTP_PORT = "587"
+SMTP_USER = "trivinexpartners@gmail.com"

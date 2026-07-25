@@ -237,7 +237,7 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════════════════
            HERO — Full-viewport dark with 3D dashboard card
       ═══════════════════════════════════════════════════════════ */}
-      <section className="relative min-h-screen bg-[#06060A] flex items-center overflow-hidden">
+      <section className="relative min-h-[calc(100svh-4rem)] lg:min-h-screen bg-[#06060A] flex items-center overflow-hidden">
         {/* Background effects */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/3 left-1/4 w-[600px] h-[600px] rounded-full bg-blue-600/[0.08] blur-[120px]" />
@@ -251,8 +251,8 @@ export default function Home() {
           />
         </div>
 
-        <div className="container mx-auto px-4 py-32 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+        <div className="container mx-auto px-4 py-12 sm:py-20 lg:py-32 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left — copy */}
             <div>
               <motion.div
@@ -269,7 +269,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.1 }}
-                className="text-5xl lg:text-7xl font-extrabold tracking-tighter text-white leading-[1.05] mb-6"
+                className="text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tighter text-white leading-[1.05] mb-6"
               >
                 Build something
                 <br />

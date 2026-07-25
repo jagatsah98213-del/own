@@ -18,6 +18,12 @@ import {
   sendEmail,
   clientInquiryConfirmationEmail,
   freelancerApplicationConfirmationEmail,
+  consultationConfirmationEmail,
+  interviewBookingConfirmationEmail,
+  inquiryAdminNotificationEmail,
+  consultationAdminNotificationEmail,
+  applicantAdminNotificationEmail,
+  interviewAdminNotificationEmail,
 } from "../lib/email";
 import {
   ListPublicServicesResponse,
@@ -39,6 +45,7 @@ import {
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
+const adminEmail = () => process.env.ADMIN_EMAIL || process.env.SMTP_USER;
 
 router.get("/public/services", async (_req, res) => {
   const serviceRows = await db
@@ -146,7 +153,16 @@ router.post("/public/inquiries", async (req, res) => {
     inquiry.email,
     "We've Received Your Quote Request — Trivinex Partners",
     clientInquiryConfirmationEmail(inquiry.name, inquiry.serviceNeeded),
+    { replyTo: adminEmail() },
   ).catch(() => {});
+  if (adminEmail()) {
+    sendEmail(
+      adminEmail()!,
+      `New Quote Request from ${inquiry.name}`,
+      inquiryAdminNotificationEmail(inquiry),
+      { replyTo: inquiry.email },
+    ).catch(() => {});
+  }
   res.status(201).json(CreateInquiryResponse.parse(inquiry));
 });
 
@@ -173,7 +189,23 @@ router.post("/public/meeting-bookings", async (req, res) => {
     .set({ booked: slot.booked + 1 })
     .where(eq(slotsTable.id, slot.id));
 
-  res.status(201).json(CreateMeetingBookingResponse.parse({ ...booking, slot: { ...slot, booked: slot.booked + 1 } }));
+  const slotWithBooking = { ...slot, booked: slot.booked + 1 };
+  sendEmail(
+    booking.clientEmail,
+    "Your Consultation Is Booked — Trivinex Partners",
+    consultationConfirmationEmail(booking.clientName, slotWithBooking),
+    { replyTo: adminEmail() },
+  ).catch(() => {});
+  if (adminEmail()) {
+    sendEmail(
+      adminEmail()!,
+      `New Consultation Booking from ${booking.clientName}`,
+      consultationAdminNotificationEmail({ ...booking, slot: slotWithBooking }),
+      { replyTo: booking.clientEmail },
+    ).catch(() => {});
+  }
+
+  res.status(201).json(CreateMeetingBookingResponse.parse({ ...booking, slot: slotWithBooking }));
 });
 
 router.post("/public/applicants", async (req, res) => {
@@ -200,7 +232,16 @@ router.post("/public/applicants", async (req, res) => {
     applicant.email,
     "Your Application Has Been Received — Trivinex Partners",
     freelancerApplicationConfirmationEmail(applicant.fullName, applicant.serviceCategory),
+    { replyTo: adminEmail() },
   ).catch(() => {});
+  if (adminEmail()) {
+    sendEmail(
+      adminEmail()!,
+      `New Freelancer Application from ${applicant.fullName}`,
+      applicantAdminNotificationEmail(applicant),
+      { replyTo: applicant.email },
+    ).catch(() => {});
+  }
   res.status(201).json(CreateApplicantResponse.parse(applicant));
 });
 
@@ -215,7 +256,12 @@ router.get("/public/faqs", async (_req, res) => {
 
 router.post("/public/interview-bookings", async (req, res) => {
   const body = CreateInterviewBookingBody.parse(req.body);
+  const [applicant] = await db.select().from(applicantsTable).where(eq(applicantsTable.id, body.applicantId));
   const [slot] = await db.select().from(slotsTable).where(eq(slotsTable.id, body.slotId));
+  if (!applicant) {
+    res.status(400).json({ message: "Applicant not found" });
+    return;
+  }
   if (!slot || slot.purpose !== "INTERVIEW" || slot.booked >= slot.capacity) {
     res.status(400).json({ message: "This slot is no longer available" });
     return;
@@ -233,6 +279,22 @@ router.post("/public/interview-bookings", async (req, res) => {
     .update(applicantsTable)
     .set({ status: "interview_scheduled" })
     .where(eq(applicantsTable.id, body.applicantId));
+
+  const slotWithBooking = { ...slot, booked: slot.booked + 1 };
+  sendEmail(
+    applicant.email,
+    "Your Interview Is Scheduled — Trivinex Partners",
+    interviewBookingConfirmationEmail(applicant.fullName, slotWithBooking),
+    { replyTo: adminEmail() },
+  ).catch(() => {});
+  if (adminEmail()) {
+    sendEmail(
+      adminEmail()!,
+      `Interview Scheduled for ${applicant.fullName}`,
+      interviewAdminNotificationEmail({ ...booking, applicant, slot: slotWithBooking }),
+      { replyTo: applicant.email },
+    ).catch(() => {});
+  }
 
   res.status(201).json(CreateInterviewBookingResponse.parse(booking));
 });
