@@ -4,7 +4,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://REPLACE_WITH_RAILWAY_API_URL/api/:path*"
+      "destination": "https://own-production-5620.up.railway.app/api/:path*"
     },
     {
       "source": "/(.*)",
