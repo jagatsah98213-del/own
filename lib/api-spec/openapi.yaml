@@ -1827,7 +1827,6 @@ components:
         - newApplicants
         - interviewsThisWeek
         - activeProjects
-        - pendingPayouts
         - newInquiries
         - upcomingConsultations
         - applicantsByStatus
@@ -1836,7 +1835,6 @@ components:
         newApplicants: { type: integer }
         interviewsThisWeek: { type: integer }
         activeProjects: { type: integer }
-        pendingPayouts: { type: integer }
         newInquiries: { type: integer }
         upcomingConsultations: { type: integer }
         applicantsByStatus:

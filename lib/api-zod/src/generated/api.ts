@@ -450,7 +450,6 @@ export const GetAdminDashboardResponse = zod.object({
   "newApplicants": zod.number(),
   "interviewsThisWeek": zod.number(),
   "activeProjects": zod.number(),
-  "pendingPayouts": zod.number(),
   "newInquiries": zod.number(),
   "upcomingConsultations": zod.number(),
   "applicantsByStatus": zod.record(zod.string(), zod.number()),

@@ -12,7 +12,6 @@ export interface AdminDashboard {
   newApplicants: number;
   interviewsThisWeek: number;
   activeProjects: number;
-  pendingPayouts: number;
   newInquiries: number;
   upcomingConsultations: number;
   applicantsByStatus: AdminDashboardApplicantsByStatus;
