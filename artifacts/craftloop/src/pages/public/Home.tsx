@@ -105,7 +105,7 @@ function HeroDashboardCard({ settings }: { settings: Record<string, string> }) {
       <motion.div
         ref={ref}
         style={{ rotateX, rotateY, transformPerspective: 1200, transformStyle: "preserve-3d" }}
-        className="relative w-[420px] max-w-full"
+        className="relative w-full max-w-[420px] sm:w-[420px]"
       >
         <div className="absolute inset-0 translate-y-8 scale-95 bg-blue-500/20 rounded-3xl blur-2xl" />
         <div className="relative bg-white/[0.05] backdrop-blur-2xl border border-white/[0.12] rounded-3xl p-6 shadow-[0_40px_80px_rgba(0,0,0,0.6)]">
@@ -168,11 +168,11 @@ function HeroDashboardCard({ settings }: { settings: Record<string, string> }) {
           </div>
         </div>
 
-        {/* Floating badge 1 */}
+        {/* Floating badge 1 — hidden on small screens to prevent overflow */}
         <motion.div
           animate={{ y: [0, -8, 0] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-4 -right-4 bg-white rounded-2xl px-4 py-2.5 shadow-2xl border border-[#E8E8ED] flex items-center gap-2.5"
+          className="hidden sm:flex absolute -top-4 -right-4 bg-white rounded-2xl px-4 py-2.5 shadow-2xl border border-[#E8E8ED] items-center gap-2.5"
         >
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center text-white text-sm">✓</div>
           <div>
@@ -181,11 +181,11 @@ function HeroDashboardCard({ settings }: { settings: Record<string, string> }) {
           </div>
         </motion.div>
 
-        {/* Floating badge 2 */}
+        {/* Floating badge 2 — hidden on small screens to prevent overflow */}
         <motion.div
           animate={{ y: [0, 8, 0] }}
           transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-          className="absolute -bottom-4 -left-4 bg-white rounded-2xl px-4 py-2.5 shadow-2xl border border-[#E8E8ED] flex items-center gap-2.5"
+          className="hidden sm:flex absolute -bottom-4 -left-4 bg-white rounded-2xl px-4 py-2.5 shadow-2xl border border-[#E8E8ED] items-center gap-2.5"
         >
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-sm">★</div>
           <div>
@@ -237,7 +237,7 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════════════════
            HERO — Full-viewport dark with 3D dashboard card
       ═══════════════════════════════════════════════════════════ */}
-      <section className="relative min-h-[calc(100svh-4rem)] lg:min-h-screen bg-[#06060A] flex items-center overflow-hidden">
+      <section className="relative min-h-[calc(100svh-4rem)] lg:min-h-screen bg-[#06060A] flex items-center overflow-x-clip overflow-y-hidden">
         {/* Background effects */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/3 left-1/4 w-[600px] h-[600px] rounded-full bg-blue-600/[0.08] blur-[120px]" />
@@ -251,8 +251,8 @@ export default function Home() {
           />
         </div>
 
-        <div className="container mx-auto px-4 py-12 sm:py-20 lg:py-32 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        <div className="w-full container mx-auto px-4 py-12 sm:py-20 lg:py-32 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             {/* Left — copy */}
             <div>
               <motion.div
@@ -287,7 +287,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-lg text-white/50 leading-relaxed max-w-lg mb-10"
+                className="text-lg text-white/50 leading-relaxed max-w-lg mb-10 w-full"
               >
                 Trivinex Partners is a premium creative agency delivering world-class web development, design, video, and marketing — powered by the top 1% of verified talent.
               </motion.p>
@@ -296,7 +296,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
-                className="flex flex-wrap gap-4"
+                className="flex flex-wrap gap-3 sm:gap-4"
               >
                 <Link
                   href="/quote"
