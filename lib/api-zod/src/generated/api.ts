@@ -514,6 +514,16 @@ export const GetAdminApplicantResponse = zod.object({
 
 
 /**
+ * @summary Permanently delete an applicant record
+ */
+export const DeleteAdminApplicantParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteAdminApplicantResponse = zod.void()
+
+
+/**
  * @summary Update an applicant's status or notes
  */
 export const UpdateAdminApplicantParams = zod.object({
@@ -901,6 +911,16 @@ export const ListAdminInquiriesResponse = zod.array(ListAdminInquiriesResponseIt
 
 
 /**
+ * @summary Permanently delete a client inquiry record
+ */
+export const DeleteAdminInquiryParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteAdminInquiryResponse = zod.void()
+
+
+/**
  * @summary Update a client inquiry's status
  */
 export const UpdateAdminInquiryParams = zod.object({
@@ -1015,6 +1035,16 @@ export const CreateAdminProjectResponse = zod.object({
   "clientPaymentAmount": zod.number().nullish(),
   "createdAt": zod.coerce.date()
 })
+
+
+/**
+ * @summary Permanently delete a project record
+ */
+export const DeleteAdminProjectParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteAdminProjectResponse = zod.void()
 
 
 /**

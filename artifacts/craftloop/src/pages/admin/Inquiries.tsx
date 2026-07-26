@@ -1,5 +1,8 @@
-import { useListAdminInquiries, useListAdminServices, useConvertInquiryToProject, getListAdminInquiriesQueryKey, useUpdateAdminInquiry } from "@workspace/api-client-react";
-import { Loader2, Plus, Eye, CheckCircle } from "lucide-react";
+import {
+  useListAdminInquiries, useListAdminServices, useConvertInquiryToProject,
+  getListAdminInquiriesQueryKey, useUpdateAdminInquiry, useDeleteAdminInquiry,
+} from "@workspace/api-client-react";
+import { Loader2, Plus, Eye, CheckCircle, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +28,7 @@ const convertSchema = z.object({
 export default function Inquiries() {
   const { data: inquiries, isLoading } = useListAdminInquiries();
   const updateInquiry = useUpdateAdminInquiry();
+  const deleteInquiry = useDeleteAdminInquiry();
   const convertToProject = useConvertInquiryToProject();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -36,6 +40,7 @@ export default function Inquiries() {
 
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [convertDialogOpen, setConvertDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedInquiry, setSelectedInquiry] = useState<number | null>(null);
 
   const inquiry = inquiries?.find(i => i.id === selectedInquiry);
@@ -77,6 +82,20 @@ export default function Inquiries() {
         queryClient.invalidateQueries({ queryKey: getListAdminInquiriesQueryKey() });
         toast({ title: "Status updated" });
       }
+    });
+  };
+
+  const handleDelete = () => {
+    if (!selectedInquiry) return;
+    deleteInquiry.mutate({ id: selectedInquiry }, {
+      onSuccess: () => {
+        setDeleteDialogOpen(false);
+        setViewDialogOpen(false);
+        setSelectedInquiry(null);
+        queryClient.invalidateQueries({ queryKey: getListAdminInquiriesQueryKey() });
+        toast({ title: "Inquiry deleted" });
+      },
+      onError: (err) => toast({ variant: "destructive", title: "Error", description: (err.data as any)?.message || err.message })
     });
   };
 
@@ -124,14 +143,24 @@ export default function Inquiries() {
                     </TableCell>
                     <TableCell className="text-muted-foreground">{format(new Date(inq.createdAt), "MMM d, yyyy")}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" onClick={() => { setSelectedInquiry(inq.id); setViewDialogOpen(true); }}>
-                        <Eye className="w-4 h-4 mr-2" /> View
-                      </Button>
-                      {inq.status !== 'converted' && inq.status !== 'closed' && (
-                        <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10 ml-2" onClick={() => handleOpenConvert(inq.id)}>
-                          <Plus className="w-4 h-4 mr-2" /> Convert
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => { setSelectedInquiry(inq.id); setViewDialogOpen(true); }}>
+                          <Eye className="w-4 h-4 mr-2" /> View
                         </Button>
-                      )}
+                        {inq.status !== 'converted' && inq.status !== 'closed' && (
+                          <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10" onClick={() => handleOpenConvert(inq.id)}>
+                            <Plus className="w-4 h-4 mr-2" /> Convert
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => { setSelectedInquiry(inq.id); setDeleteDialogOpen(true); }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -146,6 +175,7 @@ export default function Inquiries() {
         )}
       </Card>
 
+      {/* View Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
         <DialogContent className="max-w-xl">
           <DialogHeader>
@@ -194,6 +224,7 @@ export default function Inquiries() {
         </DialogContent>
       </Dialog>
 
+      {/* Convert Dialog */}
       <Dialog open={convertDialogOpen} onOpenChange={setConvertDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -234,6 +265,24 @@ export default function Inquiries() {
         </DialogContent>
       </Dialog>
 
+      {/* Delete Confirm Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Delete Inquiry?</DialogTitle>
+            <DialogDescription>
+              This will permanently delete the inquiry from <span className="font-semibold text-foreground">{inquiry?.name}</span>. This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={deleteInquiry.isPending} className="font-bold">
+              {deleteInquiry.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+              Delete Inquiry
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

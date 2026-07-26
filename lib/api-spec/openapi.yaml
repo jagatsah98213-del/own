@@ -440,6 +440,25 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteAdminApplicant
+      tags: [admin]
+      summary: Permanently delete an applicant record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
     patch:
       operationId: updateAdminApplicant
       tags: [admin]
@@ -723,6 +742,25 @@ paths:
                 items:
                   $ref: "#/components/schemas/ClientInquiry"
   /admin/inquiries/{id}:
+    delete:
+      operationId: deleteAdminInquiry
+      tags: [admin]
+      summary: Permanently delete a client inquiry record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
     patch:
       operationId: updateAdminInquiry
       tags: [admin]
@@ -802,6 +840,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/Project"
   /admin/projects/{id}:
+    delete:
+      operationId: deleteAdminProject
+      tags: [admin]
+      summary: Permanently delete a project record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
     patch:
       operationId: updateAdminProject
       tags: [admin]

@@ -1,10 +1,13 @@
 import { useState } from "react";
-import { useListAdminApplicants, useRejectApplicant, getListAdminApplicantsQueryKey, useListAdminInterviewSlots, useCreateAdminInterviewSlot } from "@workspace/api-client-react";
+import {
+  useListAdminApplicants, useRejectApplicant, useDeleteAdminApplicant,
+  getListAdminApplicantsQueryKey,
+} from "@workspace/api-client-react";
 import { ServiceCategory } from "@workspace/api-client-react/api.schemas";
-import { Loader2, Eye, XCircle, ExternalLink } from "lucide-react";
+import { Loader2, Eye, XCircle, ExternalLink, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -24,9 +27,11 @@ export default function Applicants() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const rejectApp = useRejectApplicant();
+  const deleteApp = useDeleteAdminApplicant();
 
   const [selectedApplicant, setSelectedApplicant] = useState<number | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const applicant = applicants?.find(a => a.id === selectedApplicant);
 
@@ -36,6 +41,20 @@ export default function Applicants() {
         setViewDialogOpen(false);
         queryClient.invalidateQueries({ queryKey: getListAdminApplicantsQueryKey() });
         toast({ title: "Applicant Rejected" });
+      },
+      onError: (err) => toast({ variant: "destructive", title: "Error", description: (err.data as any)?.message || err.message })
+    });
+  };
+
+  const handleDelete = () => {
+    if (!selectedApplicant) return;
+    deleteApp.mutate({ id: selectedApplicant }, {
+      onSuccess: () => {
+        setDeleteDialogOpen(false);
+        setViewDialogOpen(false);
+        setSelectedApplicant(null);
+        queryClient.invalidateQueries({ queryKey: getListAdminApplicantsQueryKey() });
+        toast({ title: "Application deleted" });
       },
       onError: (err) => toast({ variant: "destructive", title: "Error", description: (err.data as any)?.message || err.message })
     });
@@ -118,9 +137,19 @@ export default function Applicants() {
                     </TableCell>
                     <TableCell className="text-muted-foreground">{format(new Date(app.createdAt), "MMM d, yyyy")}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" onClick={() => { setSelectedApplicant(app.id); setViewDialogOpen(true); }}>
-                        <Eye className="w-4 h-4 mr-2" /> View
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => { setSelectedApplicant(app.id); setViewDialogOpen(true); }}>
+                          <Eye className="w-4 h-4 mr-2" /> View
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => { setSelectedApplicant(app.id); setDeleteDialogOpen(true); }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -135,6 +164,7 @@ export default function Applicants() {
         )}
       </Card>
 
+      {/* View Detail Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -205,15 +235,42 @@ export default function Applicants() {
                 </div>
               )}
 
-              {['applied', 'interview_scheduled', 'interviewed'].includes(applicant.status) && (
-                <div className="flex justify-end gap-3 pt-4 border-t border-border">
+              <div className="flex justify-between items-center pt-4 border-t border-border">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10 font-semibold"
+                  onClick={() => { setViewDialogOpen(false); setDeleteDialogOpen(true); }}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" /> Delete Record
+                </Button>
+                {['applied', 'interview_scheduled', 'interviewed'].includes(applicant.status) && (
                   <Button variant="destructive" onClick={() => handleReject(applicant.id)} disabled={rejectApp.isPending}>
                     <XCircle className="w-4 h-4 mr-2" /> Reject
                   </Button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirm Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Delete Application?</DialogTitle>
+            <DialogDescription>
+              This will permanently delete the application from <span className="font-semibold text-foreground">{applicant?.fullName}</span>. This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={deleteApp.isPending} className="font-bold">
+              {deleteApp.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+              Delete Application
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

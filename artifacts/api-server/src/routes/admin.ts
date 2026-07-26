@@ -210,6 +210,14 @@ router.post("/admin/applicants/:id/reject", async (req, res) => {
   res.json(RejectApplicantResponse.parse(updated));
 });
 
+router.delete("/admin/applicants/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  const [deleted] = await db.delete(applicantsTable).where(eq(applicantsTable.id, id)).returning();
+  if (!deleted) { res.status(404).json({ message: "Applicant not found" }); return; }
+  await recordAuditLog(String(req.session.userId), "applicant.delete", { applicantId: id });
+  res.status(204).send();
+});
+
 // ---------- Interview slots ----------
 
 router.get("/admin/interview-slots", async (_req, res) => {
@@ -368,6 +376,14 @@ router.post("/admin/inquiries/:id/convert-to-project", async (req, res) => {
   res.status(201).json(ConvertInquiryToProjectResponse.parse(project));
 });
 
+router.delete("/admin/inquiries/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  const [deleted] = await db.delete(clientInquiriesTable).where(eq(clientInquiriesTable.id, id)).returning();
+  if (!deleted) { res.status(404).json({ message: "Inquiry not found" }); return; }
+  await recordAuditLog(String(req.session.userId), "inquiry.delete", { inquiryId: id });
+  res.status(204).send();
+});
+
 // ---------- Projects ----------
 
 router.get("/admin/projects", async (_req, res) => {
@@ -395,6 +411,14 @@ router.patch("/admin/projects/:id", async (req, res) => {
     return;
   }
   res.json(UpdateAdminProjectResponse.parse(updated));
+});
+
+router.delete("/admin/projects/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  const [deleted] = await db.delete(projectsTable).where(eq(projectsTable.id, id)).returning();
+  if (!deleted) { res.status(404).json({ message: "Project not found" }); return; }
+  await recordAuditLog(String(req.session.userId), "project.delete", { projectId: id });
+  res.status(204).send();
 });
 
 // ---------- Services ----------

@@ -1,7 +1,10 @@
 import { useState } from "react";
-import { useListAdminProjects, useCreateAdminProject, useUpdateAdminProject, getListAdminProjectsQueryKey } from "@workspace/api-client-react";
+import {
+  useListAdminProjects, useCreateAdminProject, useUpdateAdminProject,
+  useDeleteAdminProject, getListAdminProjectsQueryKey,
+} from "@workspace/api-client-react";
 import { ProjectStatus, ServiceCategory } from "@workspace/api-client-react/api.schemas";
-import { Loader2, ExternalLink, Link as LinkIcon, CheckCircle, Plus } from "lucide-react";
+import { Loader2, ExternalLink, Link as LinkIcon, CheckCircle, Plus, Trash2, DollarSign } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +31,10 @@ const createProjectSchema = z.object({
   description: z.string().optional(),
 });
 
+const markPaidSchema = z.object({
+  clientPaymentAmount: z.string().min(1, "Amount is required").refine(v => !isNaN(Number(v)) && Number(v) > 0, "Enter a valid amount"),
+});
+
 const specialtyLabel: Record<string, string> = {
   WEB_DEVELOPMENT: "Web Dev",
   VIDEO_EDITING: "Video",
@@ -41,11 +48,14 @@ export default function Projects() {
   const { data: projects, isLoading } = useListAdminProjects();
   const createProject = useCreateAdminProject();
   const updateProject = useUpdateAdminProject();
+  const deleteProject = useDeleteAdminProject();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [resourceDialogOpen, setResourceDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [markPaidDialogOpen, setMarkPaidDialogOpen] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [resourceText, setResourceText] = useState("");
 
@@ -56,11 +66,28 @@ export default function Projects() {
     defaultValues: { title: "", clientName: "", clientEmail: "", clientPhone: "", serviceCategory: undefined, description: "" },
   });
 
+  const paidForm = useForm<z.infer<typeof markPaidSchema>>({
+    resolver: zodResolver(markPaidSchema),
+    defaultValues: { clientPaymentAmount: "" },
+  });
+
   const openResourceDialog = (p: typeof project) => {
     if (!p) return;
     setSelectedProjectId(p.id);
     setResourceText(p.description ?? "");
     setResourceDialogOpen(true);
+  };
+
+  const openDeleteDialog = (id: number) => {
+    setSelectedProjectId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const openMarkPaidDialog = (p: typeof project) => {
+    if (!p) return;
+    setSelectedProjectId(p.id);
+    paidForm.reset({ clientPaymentAmount: p.clientPaymentAmount ? String(p.clientPaymentAmount) : "" });
+    setMarkPaidDialogOpen(true);
   };
 
   const handleCreate = (values: z.infer<typeof createProjectSchema>) => {
@@ -90,6 +117,31 @@ export default function Projects() {
   const handleUpdateStatus = (id: number, status: ProjectStatus) => {
     updateProject.mutate({ id, data: { status } }, {
       onSuccess: () => queryClient.invalidateQueries({ queryKey: getListAdminProjectsQueryKey() }),
+    });
+  };
+
+  const handleDelete = () => {
+    if (!selectedProjectId) return;
+    deleteProject.mutate({ id: selectedProjectId }, {
+      onSuccess: () => {
+        setDeleteDialogOpen(false);
+        setSelectedProjectId(null);
+        queryClient.invalidateQueries({ queryKey: getListAdminProjectsQueryKey() });
+        toast({ title: "Project deleted" });
+      },
+      onError: (err) => toast({ variant: "destructive", title: "Error", description: (err.data as any)?.message || err.message }),
+    });
+  };
+
+  const handleMarkPaid = (values: z.infer<typeof markPaidSchema>) => {
+    if (!selectedProjectId) return;
+    updateProject.mutate({ id: selectedProjectId, data: { clientPaymentReceived: true, clientPaymentAmount: Number(values.clientPaymentAmount) } }, {
+      onSuccess: () => {
+        setMarkPaidDialogOpen(false);
+        queryClient.invalidateQueries({ queryKey: getListAdminProjectsQueryKey() });
+        toast({ title: "Payment recorded" });
+      },
+      onError: (err) => toast({ variant: "destructive", title: "Error", description: (err.data as any)?.message || err.message }),
     });
   };
 
@@ -153,20 +205,39 @@ export default function Projects() {
                     </TableCell>
                     <TableCell>
                       {p.clientPaymentReceived ? (
-                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/30">Paid (${p.clientPaymentAmount})</Badge>
+                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/30 font-semibold">
+                          Paid{p.clientPaymentAmount ? ` ($${p.clientPaymentAmount})` : ""}
+                        </Badge>
                       ) : (
-                        <Badge variant="outline" className="text-muted-foreground">Unpaid</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right space-x-1">
-                      {p.deliverableUrl && (
-                        <Button variant="ghost" size="sm" onClick={() => window.open(p.deliverableUrl!, "_blank")}>
-                          <ExternalLink className="w-4 h-4 mr-1" /> Asset
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs font-semibold text-muted-foreground hover:text-green-600 hover:border-green-500/40"
+                          onClick={() => openMarkPaidDialog(p)}
+                        >
+                          <DollarSign className="w-3 h-3 mr-1" /> Mark Paid
                         </Button>
                       )}
-                      <Button variant="outline" size="sm" onClick={() => openResourceDialog(p)}>
-                        <LinkIcon className="w-4 h-4 mr-1" /> Brief
-                      </Button>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        {p.deliverableUrl && (
+                          <Button variant="ghost" size="sm" onClick={() => window.open(p.deliverableUrl!, "_blank")}>
+                            <ExternalLink className="w-4 h-4 mr-1" /> Asset
+                          </Button>
+                        )}
+                        <Button variant="outline" size="sm" onClick={() => openResourceDialog(p)}>
+                          <LinkIcon className="w-4 h-4 mr-1" /> Brief
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => openDeleteDialog(p.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -296,6 +367,58 @@ export default function Projects() {
                 Save Brief & Resources
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Mark Paid Dialog */}
+      <Dialog open={markPaidDialogOpen} onOpenChange={setMarkPaidDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Record Client Payment</DialogTitle>
+            <DialogDescription>Enter the amount received from the client.</DialogDescription>
+          </DialogHeader>
+          <Form {...paidForm}>
+            <form onSubmit={paidForm.handleSubmit(handleMarkPaid)} className="space-y-4 mt-2">
+              <FormField control={paidForm.control} name="clientPaymentAmount" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Amount Received (USD)</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">$</span>
+                      <Input type="number" min="0" step="0.01" placeholder="0.00" className="pl-7" {...field} />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <div className="flex justify-end gap-3 pt-2">
+                <Button type="button" variant="outline" onClick={() => setMarkPaidDialogOpen(false)}>Cancel</Button>
+                <Button type="submit" disabled={updateProject.isPending} className="font-bold bg-green-600 hover:bg-green-700 text-white">
+                  {updateProject.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <DollarSign className="w-4 h-4 mr-2" />}
+                  Mark as Paid
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirm Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Delete Project?</DialogTitle>
+            <DialogDescription>
+              This will permanently delete <span className="font-semibold text-foreground">{project?.title}</span> and all its data. This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={deleteProject.isPending} className="font-bold">
+              {deleteProject.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+              Delete Project
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

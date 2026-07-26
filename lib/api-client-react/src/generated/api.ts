@@ -1852,6 +1852,77 @@ export function useGetAdminApplicant<TData = Awaited<ReturnType<typeof getAdminA
 
 
 
+export const getDeleteAdminApplicantUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/applicants/${id}`
+}
+
+/**
+ * @summary Permanently delete an applicant record
+ */
+export const deleteAdminApplicant = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteAdminApplicantUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteAdminApplicantMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAdminApplicant>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAdminApplicant>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteAdminApplicant'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAdminApplicant>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteAdminApplicant(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAdminApplicantMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAdminApplicant>>>
+
+    export type DeleteAdminApplicantMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Permanently delete an applicant record
+ */
+export const useDeleteAdminApplicant = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAdminApplicant>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAdminApplicant>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteAdminApplicantMutationOptions(options));
+    }
+
 export const getUpdateAdminApplicantUrl = (id: number,) => {
 
 
@@ -2952,6 +3023,77 @@ export function useListAdminInquiries<TData = Awaited<ReturnType<typeof listAdmi
 
 
 
+export const getDeleteAdminInquiryUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/inquiries/${id}`
+}
+
+/**
+ * @summary Permanently delete a client inquiry record
+ */
+export const deleteAdminInquiry = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteAdminInquiryUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteAdminInquiryMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAdminInquiry>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAdminInquiry>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteAdminInquiry'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAdminInquiry>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteAdminInquiry(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAdminInquiryMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAdminInquiry>>>
+
+    export type DeleteAdminInquiryMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Permanently delete a client inquiry record
+ */
+export const useDeleteAdminInquiry = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAdminInquiry>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAdminInquiry>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteAdminInquiryMutationOptions(options));
+    }
+
 export const getUpdateAdminInquiryUrl = (id: number,) => {
 
 
@@ -3242,6 +3384,77 @@ export const useCreateAdminProject = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getCreateAdminProjectMutationOptions(options));
+    }
+
+export const getDeleteAdminProjectUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/projects/${id}`
+}
+
+/**
+ * @summary Permanently delete a project record
+ */
+export const deleteAdminProject = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteAdminProjectUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteAdminProjectMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAdminProject>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAdminProject>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteAdminProject'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAdminProject>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteAdminProject(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAdminProjectMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAdminProject>>>
+
+    export type DeleteAdminProjectMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Permanently delete a project record
+ */
+export const useDeleteAdminProject = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAdminProject>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAdminProject>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteAdminProjectMutationOptions(options));
     }
 
 export const getUpdateAdminProjectUrl = (id: number,) => {
