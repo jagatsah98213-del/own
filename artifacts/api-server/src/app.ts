@@ -17,8 +17,21 @@ app.use(
   helmet({
     contentSecurityPolicy: false, // CSP managed by Vite / frontend
     crossOriginResourcePolicy: { policy: "cross-origin" },
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+    hsts: isProd
+      ? { maxAge: 63_072_000, includeSubDomains: true, preload: true }
+      : false,
+    permittedCrossDomainPolicies: { permittedPolicies: "none" },
+    dnsPrefetchControl: { allow: false },
   }),
 );
+
+// ─── Additional security headers ─────────────────────────────────────────────
+app.use((_req, res, next) => {
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
+  res.setHeader("X-Permitted-Cross-Domain-Policies", "none");
+  next();
+});
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
 const isProd = process.env["NODE_ENV"] === "production";

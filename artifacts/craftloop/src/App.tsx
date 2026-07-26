@@ -18,6 +18,7 @@ import Consultation from '@/pages/public/Consultation';
 import Testimonials from '@/pages/public/Testimonials';
 import Careers from '@/pages/public/Careers';
 import Freelancers from '@/pages/public/Freelancers';
+import PrivacyPolicy from '@/pages/public/PrivacyPolicy';
 
 import Login from '@/pages/auth/Login';
 
@@ -129,6 +130,7 @@ function Router() {
       <Route path="/testimonials" component={() => <PublicLayout><Testimonials /></PublicLayout>} />
       <Route path="/careers" component={() => <PublicLayout><Careers /></PublicLayout>} />
       <Route path="/freelancers" component={() => <PublicLayout><Freelancers /></PublicLayout>} />
+      <Route path="/privacy-policy" component={() => <PublicLayout><PrivacyPolicy /></PublicLayout>} />
 
       {/* ── Admin login — key-guarded ── */}
       <Route

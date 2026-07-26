@@ -3,6 +3,24 @@ import { Link } from "wouter";
 import { motion, useMotionValue, useSpring, useTransform, useInView } from "framer-motion";
 import { ArrowRight, Code, Video, Camera, Palette, PenTool, TrendingUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { SEOHead, SITE_URL } from "@/components/SEOHead";
+
+const HOME_JSONLD = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "@id": `${SITE_URL}/`,
+    "url": SITE_URL,
+    "name": "Trivinex Partners — Everything You Need, All in One Place",
+    "description": "One-stop digital services company offering web development, video editing, content writing, photography, videography, and SEO — delivered worldwide by one trusted team at honest prices.",
+    "isPartOf": { "@id": `${SITE_URL}/#website` },
+    "about": { "@id": `${SITE_URL}/#organization` },
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [{ "@type": "ListItem", "position": 1, "name": "Home", "item": SITE_URL }],
+    },
+  },
+];
 
 // Mouse-tracking 3D tilt hook for service cards
 function useTilt() {
@@ -234,6 +252,13 @@ export default function Home() {
 
   return (
     <div>
+      <SEOHead
+        title={undefined}
+        description="Trivinex Partners is a one-stop digital services company offering web development, video editing, content writing, photography, videography, and SEO — delivered worldwide by one trusted team at honest prices."
+        canonical="/"
+        jsonLd={HOME_JSONLD}
+      />
+
       {/* ═══════════════════════════════════════════════════════════
            HERO — Full-viewport dark with 3D dashboard card
       ═══════════════════════════════════════════════════════════ */}

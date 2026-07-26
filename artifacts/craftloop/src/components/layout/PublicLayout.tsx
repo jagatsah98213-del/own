@@ -182,7 +182,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
                 <span className="text-blue-600"> PARTNERS</span>
               </span>
               <p className="text-sm text-[#6E6E73] max-w-xs leading-relaxed">
-                A premium creative studio delivering enterprise-grade web development, design, and multimedia services to businesses worldwide.
+                One-stop digital services — web development, video editing, content writing, photography &amp; videography, and SEO. One team, worldwide.
               </p>
             </div>
 
@@ -255,8 +255,8 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               &copy; {new Date().getFullYear()} Trivinex Partners. All rights reserved.
             </p>
             <div className="flex items-center gap-6">
-              <span className="text-xs text-[#6E6E73]">Privacy Policy</span>
-              <span className="text-xs text-[#6E6E73]">Terms of Service</span>
+              <Link href="/privacy-policy" className="text-xs text-[#6E6E73] hover:text-[#1D1D1F] transition-colors">Privacy Policy</Link>
+              <Link href="/consultation" className="text-xs text-[#6E6E73] hover:text-[#1D1D1F] transition-colors">Contact Us</Link>
             </div>
           </div>
         </div>
