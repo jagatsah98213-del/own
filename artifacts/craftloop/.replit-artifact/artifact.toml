@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/"
-title = "Craftloop"
+title = "Trivinex Partners"
 version = "1.0.0"
 id = "artifacts/craftloop"
 router = "path"
