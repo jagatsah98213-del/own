@@ -105,7 +105,7 @@ const portfolioItems = [
 ];
 
 const testimonials = [
-  { clientName: "Priya Nair", quote: "Craftloop rebuilt our site in three weeks and conversions doubled.", rating: 5, isPublished: true },
+  { clientName: "Priya Nair", quote: "Trivinex Partners rebuilt our site in three weeks and conversions doubled.", rating: 5, isPublished: true },
   { clientName: "Marcus Webb", quote: "The video team understood our brand voice instantly.", rating: 5, isPublished: true },
   { clientName: "Sofia Álvarez", quote: "Consistently reliable freelancers, managed like an in-house team.", rating: 4, isPublished: true },
 ];
@@ -181,12 +181,12 @@ async function seed() {
     logger.info("Seeded portfolio items");
   }
 
-  const adminEmail = "admin@craftloop.app";
+  const adminEmail = "admin@trivinexpartners.com";
   const [existingAdmin] = await db.select().from(usersTable).where((await import("drizzle-orm")).eq(usersTable.email, adminEmail));
   if (!existingAdmin) {
-    const passwordHash = await bcrypt.hash("Craftloop!Admin1", 10);
+    const passwordHash = await bcrypt.hash("Trivinex!Admin1", 10);
     await db.insert(usersTable).values({ email: adminEmail, passwordHash, role: "ADMIN" });
-    logger.info({ adminEmail }, "Seeded admin user with default password Craftloop!Admin1 (change it after first login)");
+    logger.info({ adminEmail }, "Seeded admin user with default password Trivinex!Admin1 (change it after first login)");
   }
 
   process.exit(0);

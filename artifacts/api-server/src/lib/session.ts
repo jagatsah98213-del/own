@@ -19,7 +19,7 @@ export const sessionMiddleware = session({
   secret: process.env["SESSION_SECRET"],
   resave: false,
   saveUninitialized: false,
-  name: "craftloop.sid",
+  name: "trivinex.sid",
   cookie: {
     httpOnly: true,
     secure: isProd,
