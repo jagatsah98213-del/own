@@ -8,10 +8,19 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Calendar as CalendarIcon, Clock, CheckCircle2, ArrowRight, ChevronRight } from "lucide-react";
+import { Loader2, Calendar as CalendarIcon, Clock, CheckCircle2, ArrowRight, ChevronRight, Mail, Phone, MessageCircle } from "lucide-react";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+
+function usePublicSettings() {
+  return useQuery<Record<string, string>>({
+    queryKey: ["public-site-settings"],
+    queryFn: () => fetch("/api/public/site-settings").then(r => r.json()),
+    staleTime: 5 * 60 * 1000,
+  });
+}
 
 const formSchema = z.object({
   slotId:      z.number({ required_error: "Please select a time slot" }),
@@ -33,6 +42,10 @@ export default function Consultation() {
   const createBooking = useCreateMeetingBooking();
   const { toast }     = useToast();
   const [submitted, setSubmitted] = useState(false);
+  const { data: settings = {} } = usePublicSettings();
+  const contactEmail    = settings.contact_email    || "";
+  const contactPhone    = settings.contact_phone    || "";
+  const contactWhatsapp = settings.contact_whatsapp || "";
 
   // Step state: "date" → "time" → "details"
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -139,6 +152,71 @@ export default function Consultation() {
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#F5F5F7] to-transparent pointer-events-none" />
       </section>
+
+      {/* ── Direct Contact Buttons ───────────────────────────────────────────── */}
+      {(contactEmail || contactPhone || contactWhatsapp) && (
+        <section className="bg-white border-b border-[#E8E8ED] py-10">
+          <div className="container mx-auto px-4 max-w-4xl">
+            <motion.p
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="text-center text-sm font-semibold text-[#6E6E73] uppercase tracking-widest mb-6"
+            >
+              Or reach us directly
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.05 }}
+              className="flex flex-col sm:flex-row gap-4 justify-center"
+            >
+              {contactEmail && (
+                <a
+                  href={`mailto:${contactEmail}`}
+                  className="group flex items-center gap-3 px-6 py-4 rounded-2xl border-2 border-[#E8E8ED] bg-white hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 min-w-[220px] justify-center sm:justify-start"
+                >
+                  <span className="w-10 h-10 rounded-xl bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center shrink-0 transition-colors">
+                    <Mail className="w-5 h-5 text-blue-600" />
+                  </span>
+                  <div className="text-left">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#6E6E73] group-hover:text-blue-500 transition-colors">Email Us</p>
+                    <p className="text-sm font-semibold text-[#1D1D1F] group-hover:text-blue-700 transition-colors break-all">{contactEmail}</p>
+                  </div>
+                </a>
+              )}
+              {contactPhone && (
+                <a
+                  href={`tel:${contactPhone.replace(/\s/g, "")}`}
+                  className="group flex items-center gap-3 px-6 py-4 rounded-2xl border-2 border-[#E8E8ED] bg-white hover:border-[#1D1D1F] hover:bg-[#F5F5F7] transition-all duration-200 min-w-[220px] justify-center sm:justify-start"
+                >
+                  <span className="w-10 h-10 rounded-xl bg-[#F5F5F7] group-hover:bg-[#E8E8ED] flex items-center justify-center shrink-0 transition-colors">
+                    <Phone className="w-5 h-5 text-[#1D1D1F]" />
+                  </span>
+                  <div className="text-left">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#6E6E73] transition-colors">Call Us</p>
+                    <p className="text-sm font-semibold text-[#1D1D1F] transition-colors">{contactPhone}</p>
+                  </div>
+                </a>
+              )}
+              {contactWhatsapp && (
+                <a
+                  href={`https://wa.me/${contactWhatsapp.replace(/\D/g, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center gap-3 px-6 py-4 rounded-2xl border-2 border-[#E8E8ED] bg-white hover:border-green-500 hover:bg-green-50 transition-all duration-200 min-w-[220px] justify-center sm:justify-start"
+                >
+                  <span className="w-10 h-10 rounded-xl bg-green-100 group-hover:bg-green-200 flex items-center justify-center shrink-0 transition-colors">
+                    <MessageCircle className="w-5 h-5 text-green-600" />
+                  </span>
+                  <div className="text-left">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#6E6E73] group-hover:text-green-600 transition-colors">WhatsApp</p>
+                    <p className="text-sm font-semibold text-[#1D1D1F] group-hover:text-green-700 transition-colors">Chat with us</p>
+                  </div>
+                </a>
+              )}
+            </motion.div>
+          </div>
+        </section>
+      )}
 
       {/* ── Booking flow ─────────────────────────────────────────────────────── */}
       <section className="py-20 bg-[#F5F5F7]">
