@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { motion } from "framer-motion";
 import {
   ArrowRight, Globe, DollarSign, Users, ShieldCheck,
-  Code2, Film, PenLine, Camera, TrendingUp,
+  Code2, Film, PenLine, Camera, TrendingUp, Palette,
   Building2, Briefcase, UserCircle, Heart,
   CreditCard, Landmark, Wallet,
 } from "lucide-react";
@@ -53,6 +53,14 @@ const SERVICES = [
     color: "from-pink-500 to-pink-700",
     light: "bg-pink-50",
     text: "text-pink-600",
+  },
+  {
+    icon: Palette,
+    title: "Graphic Designing",
+    desc: "Logos, brand identities, social media creatives, marketing materials, and UI/UX — visuals that make your brand impossible to ignore.",
+    color: "from-orange-500 to-orange-700",
+    light: "bg-orange-50",
+    text: "text-orange-600",
   },
   {
     icon: TrendingUp,
@@ -124,7 +132,7 @@ const ABOUT_JSONLD = {
   "url": `${SITE_URL}/about`,
   "name": "About Trivinex Partners",
   "description":
-    "Trivinex Partners is a one-stop digital services company offering web development, video editing, content writing, photography, videography, and SEO — delivered worldwide by one trusted team.",
+    "Trivinex Partners is a one-stop digital services company offering web development, video editing, graphic designing, content writing, photography, videography, and SEO — delivered worldwide by one trusted team.",
   "isPartOf": { "@id": `${SITE_URL}/#website` },
   "about": { "@id": `${SITE_URL}/#organization` },
 };
@@ -134,8 +142,8 @@ export default function About() {
   return (
     <div className="flex flex-col overflow-hidden">
       <SEOHead
-        title="About Us — One Team, Five Services, Zero Compromises"
-        description="Learn how Trivinex Partners became the simpler way to handle your entire digital presence — web development, video editing, content writing, photography, and SEO, all from one trusted global team."
+        title="About Us — One Team, Six Services, Zero Compromises"
+        description="Learn how Trivinex Partners became the simpler way to handle your entire digital presence — web development, video editing, graphic designing, content writing, photography, and SEO, all from one trusted global team."
         canonical="/about"
         jsonLd={ABOUT_JSONLD}
       />
@@ -193,7 +201,7 @@ export default function About() {
             transition={{ duration: 0.6, delay: 0.25 }}
             className="text-[#8E8E9A] text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed"
           >
-            One team. Five services. Zero compromises. We built the simpler way to handle your entire digital presence — so you can focus on what you do best.
+            One team. Six services. Zero compromises. We built the simpler way to handle your entire digital presence — so you can focus on what you do best.
           </motion.p>
 
           <motion.div
@@ -236,7 +244,7 @@ export default function About() {
           </motion.h2>
           <motion.div {...fadeUpDelay(0.15)} className="space-y-6 text-[#6E6E73] text-lg leading-relaxed">
             <p>
-              In a world where businesses and creators need to juggle five different freelancers for five different jobs, Trivinex Partners was built to be the answer to all of that. We're a one-stop digital services company — web development, video editing, content writing, photography &amp; videography, and SEO — all delivered by one trusted team.
+              In a world where businesses and creators need to juggle six different freelancers for six different jobs, Trivinex Partners was built to be the answer to all of that. We're a one-stop digital services company — web development, video editing, graphic designing, content writing, photography &amp; videography, and SEO — all delivered by one trusted team.
             </p>
             <p>
               Whether you're a small business, a growing company, a content creator, or someone planning a special day and looking for beautifully edited wedding footage, we have a plan built for you. Our services aren't one-size-fits-all — we tailor our work to what you actually need.
@@ -261,7 +269,7 @@ export default function About() {
               {...fadeUpDelay(0.1)}
               className="text-4xl lg:text-5xl font-extrabold tracking-tighter text-[#1D1D1F]"
             >
-              Five services. One team.
+              Six services. One team.
             </motion.h2>
             <motion.p {...fadeUpDelay(0.15)} className="text-[#6E6E73] text-lg mt-4 max-w-xl mx-auto">
               We only offer what we can execute perfectly. Deep expertise beats shallow breadth, every time.
@@ -347,7 +355,7 @@ export default function About() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-12 text-center">
             {[
               { val: "200+", label: "Clients Served" },
-              { val: "5",    label: "Core Services" },
+              { val: "6",    label: "Core Services" },
               { val: "99%",  label: "Client Satisfaction" },
               { val: "5+",   label: "Years of Excellence" },
             ].map((s, i) => (

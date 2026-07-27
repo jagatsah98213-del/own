@@ -12,7 +12,7 @@ const HOME_JSONLD = [
     "@id": `${SITE_URL}/`,
     "url": SITE_URL,
     "name": "Trivinex Partners — Everything You Need, All in One Place",
-    "description": "One-stop digital services company offering web development, video editing, content writing, photography, videography, and SEO — delivered worldwide by one trusted team at honest prices.",
+    "description": "One-stop digital services company offering web development, video editing, graphic designing, content writing, photography, videography, and SEO — delivered worldwide by one trusted team at honest prices.",
     "isPartOf": { "@id": `${SITE_URL}/#website` },
     "about": { "@id": `${SITE_URL}/#organization` },
     "breadcrumb": {
@@ -254,7 +254,7 @@ export default function Home() {
     <div>
       <SEOHead
         title={undefined}
-        description="Trivinex Partners is a one-stop digital services company offering web development, video editing, content writing, photography, videography, and SEO — delivered worldwide by one trusted team at honest prices."
+        description="Trivinex Partners is a one-stop digital services company offering web development, video editing, graphic designing, content writing, photography, videography, and SEO — delivered worldwide by one trusted team at honest prices."
         canonical="/"
         jsonLd={HOME_JSONLD}
       />

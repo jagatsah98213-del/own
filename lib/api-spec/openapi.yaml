@@ -1299,7 +1299,7 @@ components:
 
     PayoutMethod:
       type: string
-      enum: [BANK_TRANSFER, PHONEPE, PAYPAL]
+      enum: [BANK_TRANSFER, PHONEPE, PAYPAL, ESEWA]
 
     SlotPurpose:
       type: string
