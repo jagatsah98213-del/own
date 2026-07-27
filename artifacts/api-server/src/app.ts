@@ -8,6 +8,7 @@ import { logger } from "./lib/logger";
 import { sessionMiddleware } from "./lib/session";
 
 const app: Express = express();
+const isProd = process.env["NODE_ENV"] === "production";
 
 // ─── Trust proxy (Replit / Railway reverse proxy) ───────────────────────────
 app.set("trust proxy", 1);
@@ -34,7 +35,6 @@ app.use((_req, res, next) => {
 });
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
-const isProd = process.env["NODE_ENV"] === "production";
 const rawOrigins = process.env["ALLOWED_ORIGINS"] ?? "";
 const allowedOrigins = rawOrigins
   ? rawOrigins.split(",").map((o) => o.trim()).filter(Boolean)
