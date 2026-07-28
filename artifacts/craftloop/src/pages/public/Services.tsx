@@ -21,6 +21,15 @@ const fadeUp = {
   transition: { duration: 0.6, ease: [0.21, 0.47, 0.32, 0.98] as any },
 };
 
+const staggerContainer = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.07 } },
+};
+const cardVariant = {
+  hidden: { opacity: 0, y: 40 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.21, 0.47, 0.32, 0.98] as any } },
+};
+
 export default function Services() {
   const { data: services, isLoading } = useListPublicServices();
 
@@ -33,8 +42,16 @@ export default function Services() {
       <section className="relative min-h-[65vh] flex items-center bg-[#06060A] overflow-hidden">
         {/* Background orbs */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-full bg-blue-600/10 blur-[120px]" />
-          <div className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-purple-600/10 blur-[120px]" />
+          <motion.div
+            animate={{ scale: [1, 1.1, 1], opacity: [0.1, 0.16, 0.1] }}
+            transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-full bg-blue-600 blur-[120px]"
+          />
+          <motion.div
+            animate={{ scale: [1, 1.08, 1], opacity: [0.1, 0.14, 0.1] }}
+            transition={{ duration: 11, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+            className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-purple-600 blur-[120px]"
+          />
           <div
             className="absolute inset-0 opacity-[0.025]"
             style={{
@@ -91,18 +108,22 @@ export default function Services() {
             transition={{ duration: 0.5, delay: 0.35 }}
             className="flex flex-wrap justify-center gap-4"
           >
-            <Link
-              href="/quote"
-              className="inline-flex h-12 items-center justify-center rounded-full bg-white text-[#06060A] px-8 text-sm font-bold shadow-2xl hover:bg-blue-50 transition-all duration-200 hover:-translate-y-0.5"
-            >
-              Get a Custom Quote
-            </Link>
-            <Link
-              href="/consultation"
-              className="inline-flex h-12 items-center justify-center rounded-full border border-white/20 text-white px-8 text-sm font-semibold hover:bg-white/[0.06] transition-colors duration-200"
-            >
-              Book a Free Call <ArrowRight className="ml-2 w-4 h-4" />
-            </Link>
+            <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}>
+              <Link
+                href="/quote"
+                className="inline-flex h-12 items-center justify-center rounded-full bg-white text-[#06060A] px-8 text-sm font-bold shadow-2xl hover:bg-blue-50 transition-colors duration-200"
+              >
+                Get a Custom Quote
+              </Link>
+            </motion.div>
+            <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}>
+              <Link
+                href="/consultation"
+                className="inline-flex h-12 items-center justify-center rounded-full border border-white/20 text-white px-8 text-sm font-semibold hover:bg-white/[0.06] transition-colors duration-200"
+              >
+                Book a Free Call <ArrowRight className="ml-2 w-4 h-4" />
+              </Link>
+            </motion.div>
           </motion.div>
 
           {/* Trust row */}
@@ -113,15 +134,21 @@ export default function Services() {
             className="flex items-center justify-center flex-wrap gap-6 pt-10 mt-10 border-t border-white/[0.08]"
           >
             {[
-              { icon: Star, label: "4.9/5 Rating", color: "text-yellow-400" },
-              { icon: Users, label: "200+ Clients", color: "text-blue-400" },
-              { icon: Award, label: "Top 1% Talent", color: "text-purple-400" },
-              { icon: Zap, label: "On-Time Delivery", color: "text-green-400" },
-            ].map(({ icon: Icon, label, color }) => (
-              <div key={label} className="flex items-center gap-2">
+              { icon: Star,  label: "4.9/5 Rating",    color: "text-yellow-400" },
+              { icon: Users, label: "200+ Clients",     color: "text-blue-400" },
+              { icon: Award, label: "Top 1% Talent",    color: "text-purple-400" },
+              { icon: Zap,   label: "On-Time Delivery", color: "text-green-400" },
+            ].map(({ icon: Icon, label, color }, i) => (
+              <motion.div
+                key={label}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 + i * 0.08 }}
+                className="flex items-center gap-2"
+              >
                 <Icon className={`w-4 h-4 ${color}`} />
                 <span className="text-xs font-semibold text-white/60">{label}</span>
-              </div>
+              </motion.div>
             ))}
           </motion.div>
         </div>
@@ -155,12 +182,15 @@ export default function Services() {
               <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {services?.map((service, i) => {
-                const meta = SERVICE_META[service.category] ?? {
-                  icon: Code,
-                  gradient: "from-blue-500 to-blue-600",
-                };
+            <motion.div
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.1 }}
+              className="grid md:grid-cols-2 lg:grid-cols-3 gap-5"
+            >
+              {services?.map((service) => {
+                const meta = SERVICE_META[service.category] ?? { icon: Code, gradient: "from-blue-500 to-blue-600" };
                 const Icon = meta.icon;
                 const activePlans = service.plans?.filter((p: any) => p.isActive) ?? [];
                 const lowestPrice = activePlans.map((p: any) => p.startingPrice).find(Boolean);
@@ -168,23 +198,25 @@ export default function Services() {
                 return (
                   <motion.div
                     key={service.id}
-                    initial={{ opacity: 0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.2 }}
-                    transition={{ delay: i * 0.08, duration: 0.5, ease: [0.21, 0.47, 0.32, 0.98] as any }}
+                    variants={cardVariant}
+                    whileHover={{ y: -8, scale: 1.01 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 22 }}
                   >
                     <Link href={`/services/${service.slug}`}>
-                      <div className="group relative bg-white border border-[#E8E8ED] rounded-3xl p-8 cursor-pointer overflow-hidden h-full hover:shadow-2xl hover:border-blue-100 transition-all duration-500 hover:-translate-y-1">
+                      <div className="group relative bg-white border border-[#E8E8ED] rounded-3xl p-8 cursor-pointer overflow-hidden h-full shadow-sm hover:shadow-2xl hover:border-blue-100 transition-shadow duration-500">
                         {/* Hover glow */}
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-blue-50/60 via-white to-purple-50/30 rounded-3xl" />
 
                         <div className="relative z-10">
                           {/* Icon */}
-                          <div
-                            className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${meta.gradient} flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300`}
+                          <motion.div
+                            className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${meta.gradient} flex items-center justify-center mb-6 shadow-lg`}
+                            whileHover={{ scale: 1.15, rotate: 5 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 20 }}
                           >
                             <Icon className="w-7 h-7 text-white" />
-                          </div>
+                          </motion.div>
 
                           <h3 className="text-xl font-bold text-[#1D1D1F] mb-3 tracking-tight">
                             {service.title}
@@ -216,7 +248,7 @@ export default function Services() {
                   </motion.div>
                 );
               })}
-            </div>
+            </motion.div>
           )}
         </div>
       </section>
@@ -226,7 +258,11 @@ export default function Services() {
       ══════════════════════════════════════════════ */}
       <section className="relative overflow-hidden bg-[#06060A] py-28">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[60vh] rounded-full bg-blue-500/15 blur-[100px]" />
+          <motion.div
+            animate={{ scale: [1, 1.1, 1], opacity: [0.15, 0.22, 0.15] }}
+            transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[60vh] rounded-full bg-blue-500 blur-[100px]"
+          />
           <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-purple-500/10 blur-3xl" />
         </div>
         <div className="container mx-auto px-4 text-center relative z-10">
@@ -240,18 +276,22 @@ export default function Services() {
             Book a free 30-minute call and we'll match you with the right service and plan for your project.
           </motion.p>
           <motion.div {...fadeUp} className="flex flex-wrap justify-center gap-4">
-            <Link
-              href="/consultation"
-              className="inline-flex h-12 items-center justify-center rounded-full bg-white text-[#06060A] px-8 text-sm font-bold shadow-2xl hover:bg-blue-50 transition-all duration-200 hover:-translate-y-0.5"
-            >
-              Book a Free Call
-            </Link>
-            <Link
-              href="/quote"
-              className="inline-flex h-12 items-center justify-center rounded-full border border-white/20 text-white px-8 text-sm font-semibold hover:bg-white/[0.06] transition-colors duration-200"
-            >
-              Get a Quote <ArrowRight className="ml-2 w-4 h-4" />
-            </Link>
+            <motion.div whileHover={{ y: -3, scale: 1.02 }} whileTap={{ scale: 0.97 }}>
+              <Link
+                href="/consultation"
+                className="inline-flex h-12 items-center justify-center rounded-full bg-white text-[#06060A] px-8 text-sm font-bold shadow-2xl hover:bg-blue-50 transition-colors duration-200"
+              >
+                Book a Free Call
+              </Link>
+            </motion.div>
+            <motion.div whileHover={{ y: -3 }} whileTap={{ scale: 0.97 }}>
+              <Link
+                href="/quote"
+                className="inline-flex h-12 items-center justify-center rounded-full border border-white/20 text-white px-8 text-sm font-semibold hover:bg-white/[0.06] transition-colors duration-200"
+              >
+                Get a Quote <ArrowRight className="ml-2 w-4 h-4" />
+              </Link>
+            </motion.div>
           </motion.div>
         </div>
       </section>

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Menu, X, Phone, Mail, MessageCircle, ArrowUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
+import { ScrollProgress } from "@/components/ui/ScrollProgress";
 
 function usePublicSettings() {
   return useQuery<Record<string, string>>({
@@ -170,6 +171,8 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
           </motion.button>
         )}
       </AnimatePresence>
+
+      <ScrollProgress />
 
       {/* ─── Footer ─── */}
       <footer className="bg-[#F5F5F7] border-t border-[#E8E8ED] py-12 md:py-16">

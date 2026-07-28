@@ -4,6 +4,7 @@ import { motion, useMotionValue, useSpring, useTransform, useInView } from "fram
 import { ArrowRight, Code, Video, Camera, Palette, PenTool, TrendingUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { SEOHead, SITE_URL } from "@/components/SEOHead";
+import { CountUp } from "@/components/ui/CountUp";
 
 const HOME_JSONLD = [
   {
@@ -40,12 +41,12 @@ function useTilt() {
 }
 
 const services = [
-  { icon: Code, title: "Web Development", slug: "web-development", desc: "Custom, scalable web applications engineered for performance and delight.", color: "from-blue-500 to-blue-600" },
-  { icon: Video, title: "Video Editing", slug: "video-editing", desc: "Professional post-production, color grading, and dynamic motion graphics.", color: "from-purple-500 to-purple-600" },
-  { icon: Camera, title: "Photography", slug: "photography-videography", desc: "High-end commercial, portrait, and product photography with precision lighting.", color: "from-pink-500 to-rose-600" },
-  { icon: Palette, title: "Graphic Design", slug: "graphic-design", desc: "Brand identity systems, intuitive UI/UX, and striking marketing collateral.", color: "from-orange-500 to-amber-600" },
-  { icon: PenTool, title: "Content Writing", slug: "content-writing", desc: "Engaging copy, technical docs, and compelling brand storytelling.", color: "from-green-500 to-emerald-600" },
-  { icon: TrendingUp, title: "SEO & Marketing", slug: "seo-digital-marketing", desc: "Data-driven organic strategies and measurable digital growth campaigns.", color: "from-cyan-500 to-teal-600" },
+  { icon: Code,       title: "Web Development",    slug: "web-development",          desc: "Custom, scalable web applications engineered for performance and delight.", color: "from-blue-500 to-blue-600" },
+  { icon: Video,      title: "Video Editing",       slug: "video-editing",            desc: "Professional post-production, color grading, and dynamic motion graphics.", color: "from-purple-500 to-purple-600" },
+  { icon: Camera,     title: "Photography",         slug: "photography-videography",  desc: "High-end commercial, portrait, and product photography with precision lighting.", color: "from-pink-500 to-rose-600" },
+  { icon: Palette,    title: "Graphic Design",      slug: "graphic-design",           desc: "Brand identity systems, intuitive UI/UX, and striking marketing collateral.", color: "from-orange-500 to-amber-600" },
+  { icon: PenTool,    title: "Content Writing",     slug: "content-writing",          desc: "Engaging copy, technical docs, and compelling brand storytelling.", color: "from-green-500 to-emerald-600" },
+  { icon: TrendingUp, title: "SEO & Marketing",     slug: "seo-digital-marketing",    desc: "Data-driven organic strategies and measurable digital growth campaigns.", color: "from-cyan-500 to-teal-600" },
 ];
 
 function usePublicSettings() {
@@ -56,6 +57,16 @@ function usePublicSettings() {
   });
 }
 
+// Stagger container variants
+const staggerContainer = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.09 } },
+};
+const staggerItem = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.21, 0.47, 0.32, 0.98] } },
+};
+
 function ServiceCard({ service, index }: { service: typeof services[0]; index: number }) {
   const { ref, rotateX, rotateY, handleMouseMove, handleMouseLeave } = useTilt();
   return (
@@ -64,6 +75,8 @@ function ServiceCard({ service, index }: { service: typeof services[0]; index: n
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.3 }}
       transition={{ delay: index * 0.08, duration: 0.5, ease: [0.21, 0.47, 0.32, 0.98] }}
+      whileHover={{ y: -6 }}
+      whileTap={{ scale: 0.98 }}
       style={{ perspective: 1000 }}
     >
       <Link href={`/services/${service.slug}`}>
@@ -72,7 +85,7 @@ function ServiceCard({ service, index }: { service: typeof services[0]; index: n
           style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
-          className="group relative bg-white border border-[#E8E8ED] rounded-3xl p-8 cursor-pointer overflow-hidden h-full"
+          className="group relative bg-white border border-[#E8E8ED] rounded-3xl p-8 cursor-pointer overflow-hidden h-full shadow-sm hover:shadow-2xl transition-shadow duration-500"
         >
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-blue-50/80 via-white to-purple-50/40 rounded-3xl" />
           <div style={{ transform: "translateZ(30px)" }} className="relative z-10">
@@ -100,9 +113,7 @@ function HeroDashboardCard({ settings }: { settings: Record<string, string> }) {
   const ref = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
 
-  // Bar chart — 12 static bars that look like a monthly deliverables chart
   const bars = [45, 65, 40, 80, 55, 90, 70, 85, 60, 95, 75, 88];
-
   const revenue = settings.hero_revenue || "$128k";
   const clients = settings.stat_1_value || "200+";
 
@@ -138,8 +149,8 @@ function HeroDashboardCard({ settings }: { settings: Record<string, string> }) {
           <div className="grid grid-cols-3 gap-3 mb-4">
             {[
               { label: "Revenue", val: revenue, change: "+8%", up: true },
-              { label: "Clients", val: clients, change: "+12", up: true },
-              { label: "Rating", val: "4.9/5", change: "★ Top", up: true },
+              { label: "Clients",  val: clients, change: "+12", up: true },
+              { label: "Rating",   val: "4.9/5", change: "★ Top", up: true },
             ].map((m) => (
               <div key={m.label} className="bg-white/[0.06] border border-white/[0.08] rounded-xl p-3">
                 <div className="text-[10px] text-white/40 mb-1 font-medium">{m.label}</div>
@@ -156,7 +167,13 @@ function HeroDashboardCard({ settings }: { settings: Record<string, string> }) {
             </div>
             <div className="flex items-end gap-1.5 h-14">
               {bars.map((h, i) => (
-                <div key={i} className="flex-1 rounded-sm overflow-hidden" style={{ height: `${h}%` }}>
+                <motion.div
+                  key={i}
+                  className="flex-1 rounded-sm overflow-hidden"
+                  initial={{ height: 0 }}
+                  animate={{ height: `${h}%` }}
+                  transition={{ delay: 0.6 + i * 0.04, duration: 0.5, ease: "easeOut" }}
+                >
                   <div
                     className="w-full h-full rounded-sm"
                     style={{
@@ -165,7 +182,7 @@ function HeroDashboardCard({ settings }: { settings: Record<string, string> }) {
                         : "rgba(255,255,255,0.12)",
                     }}
                   />
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
@@ -186,7 +203,7 @@ function HeroDashboardCard({ settings }: { settings: Record<string, string> }) {
           </div>
         </div>
 
-        {/* Floating badge 1 — hidden on small screens to prevent overflow */}
+        {/* Floating badge 1 */}
         <motion.div
           animate={{ y: [0, -8, 0] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
@@ -199,7 +216,7 @@ function HeroDashboardCard({ settings }: { settings: Record<string, string> }) {
           </div>
         </motion.div>
 
-        {/* Floating badge 2 — hidden on small screens to prevent overflow */}
+        {/* Floating badge 2 */}
         <motion.div
           animate={{ y: [0, 8, 0] }}
           transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
@@ -216,7 +233,7 @@ function HeroDashboardCard({ settings }: { settings: Record<string, string> }) {
   );
 }
 
-// Animated stat counter
+// Animated stat item with counting number
 function StatItem({ val, label, delay }: { val: string; label: string; delay: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, amount: 0.5 });
@@ -227,7 +244,9 @@ function StatItem({ val, label, delay }: { val: string; label: string; delay: nu
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ delay, duration: 0.6 }}
     >
-      <div className="text-5xl lg:text-6xl font-extrabold tracking-tighter text-white mb-3">{val}</div>
+      <div className="text-5xl lg:text-6xl font-extrabold tracking-tighter text-white mb-3">
+        <CountUp value={val} />
+      </div>
       <div className="text-sm font-semibold text-white/40 uppercase tracking-widest">{label}</div>
     </motion.div>
   );
@@ -240,13 +259,21 @@ const fadeUp = {
   transition: { duration: 0.6, ease: [0.21, 0.47, 0.32, 0.98] },
 } as const;
 
+// Trust bar items — appear one by one
+const trustItems = [
+  { icon: "★", label: "4.9/5 Rating" },
+  { icon: "👥", label: "200+ Clients" },
+  { icon: "🏆", label: "Top 1% Talent" },
+  { icon: "⚡", label: "On-Time Delivery" },
+];
+
 export default function Home() {
   const { data: settings = {} } = usePublicSettings();
 
   const stats = [
     { val: settings.stat_1_value || "200+", label: settings.stat_1_label || "Clients Served" },
-    { val: settings.stat_2_value || "98%", label: settings.stat_2_label || "Satisfaction Rate" },
-    { val: settings.stat_3_value || "5+", label: settings.stat_3_label || "Years of Excellence" },
+    { val: settings.stat_2_value || "98%",  label: settings.stat_2_label || "Satisfaction Rate" },
+    { val: settings.stat_3_value || "5+",   label: settings.stat_3_label || "Years of Excellence" },
     { val: settings.stat_4_value || "Top 1%", label: settings.stat_4_label || "Talent Pool" },
   ];
 
@@ -265,8 +292,16 @@ export default function Home() {
       <section className="relative min-h-[calc(100svh-4rem)] lg:min-h-screen bg-[#06060A] flex items-center overflow-x-clip overflow-y-hidden">
         {/* Background effects */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/3 left-1/4 w-[600px] h-[600px] rounded-full bg-blue-600/[0.08] blur-[120px]" />
-          <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-purple-600/[0.06] blur-[100px]" />
+          <motion.div
+            animate={{ scale: [1, 1.08, 1], opacity: [0.08, 0.12, 0.08] }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-1/3 left-1/4 w-[600px] h-[600px] rounded-full bg-blue-600 blur-[120px]"
+          />
+          <motion.div
+            animate={{ scale: [1, 1.1, 1], opacity: [0.06, 0.1, 0.06] }}
+            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+            className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-purple-600 blur-[100px]"
+          />
           <div
             className="absolute inset-0 opacity-[0.02]"
             style={{
@@ -298,14 +333,19 @@ export default function Home() {
               >
                 Build something
                 <br />
-                <span style={{
-                  background: "linear-gradient(135deg, #60A5FA 0%, #A78BFA 50%, #F472B6 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                }}>
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.8, delay: 0.4 }}
+                  style={{
+                    background: "linear-gradient(135deg, #60A5FA 0%, #A78BFA 50%, #F472B6 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                  }}
+                >
                   extraordinary.
-                </span>
+                </motion.span>
               </motion.h1>
 
               <motion.p
@@ -323,18 +363,22 @@ export default function Home() {
                 transition={{ duration: 0.5, delay: 0.3 }}
                 className="flex flex-wrap gap-3 sm:gap-4"
               >
-                <Link
-                  href="/quote"
-                  className="inline-flex h-14 items-center justify-center rounded-full bg-white text-[#06060A] px-8 text-base font-bold shadow-2xl hover:bg-blue-50 transition-all duration-200 hover:-translate-y-0.5"
-                >
-                  Start a Project
-                </Link>
-                <Link
-                  href="/consultation"
-                  className="inline-flex h-14 items-center justify-center rounded-full border border-white/20 text-white px-8 text-base font-semibold hover:bg-white/[0.06] transition-colors duration-200"
-                >
-                  Book a Free Call <ArrowRight className="ml-2 w-4 h-4" />
-                </Link>
+                <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}>
+                  <Link
+                    href="/quote"
+                    className="inline-flex h-14 items-center justify-center rounded-full bg-white text-[#06060A] px-8 text-base font-bold shadow-2xl hover:bg-blue-50 transition-colors duration-200"
+                  >
+                    Start a Project
+                  </Link>
+                </motion.div>
+                <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}>
+                  <Link
+                    href="/consultation"
+                    className="inline-flex h-14 items-center justify-center rounded-full border border-white/20 text-white px-8 text-base font-semibold hover:bg-white/[0.06] transition-colors duration-200"
+                  >
+                    Book a Free Call <ArrowRight className="ml-2 w-4 h-4" />
+                  </Link>
+                </motion.div>
               </motion.div>
             </div>
 
@@ -354,21 +398,34 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════
-           TRUST BAR — Subtle on light bg
+           TRUST BAR — Staggered individual items
       ═══════════════════════════════════════════════════════════ */}
       <section className="py-10 bg-[#F5F5F7]">
         <div className="container mx-auto px-4">
-          <motion.div {...fadeUp} className="flex flex-wrap justify-center gap-10 text-center">
-            {[
-              { icon: "★", label: "4.9/5 Rating" },
-              { icon: "👥", label: "200+ Clients" },
-              { icon: "🏆", label: "Top 1% Talent" },
-              { icon: "⚡", label: "On-Time Delivery" },
-            ].map(({ icon, label }) => (
-              <div key={label} className="flex items-center gap-2.5 text-[#6E6E73]">
-                <span className="text-lg">{icon}</span>
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.4 }}
+            className="flex flex-wrap justify-center gap-10 text-center"
+          >
+            {trustItems.map(({ icon, label }) => (
+              <motion.div
+                key={label}
+                variants={staggerItem}
+                whileHover={{ scale: 1.08, y: -2 }}
+                whileTap={{ scale: 0.96 }}
+                className="flex items-center gap-2.5 text-[#6E6E73] cursor-default"
+              >
+                <motion.span
+                  animate={{ rotate: [0, 8, -8, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, delay: Math.random() * 2, ease: "easeInOut" }}
+                  className="text-lg"
+                >
+                  {icon}
+                </motion.span>
                 <span className="text-sm font-semibold">{label}</span>
-              </div>
+              </motion.div>
             ))}
           </motion.div>
         </div>
@@ -399,7 +456,7 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════
-           SERVICES — 3D tilt cards on light bg
+           SERVICES — 3D tilt cards
       ═══════════════════════════════════════════════════════════ */}
       <section className="py-28 bg-[#F5F5F7]">
         <div className="container mx-auto px-4">
@@ -421,22 +478,28 @@ export default function Home() {
             {services.map((s, i) => <ServiceCard key={i} service={s} index={i} />)}
           </div>
           <motion.div {...fadeUp} className="text-center mt-12">
-            <Link
-              href="/services"
-              className="inline-flex h-12 items-center gap-2 rounded-full border border-[#D2D2D7] bg-white px-7 text-sm font-semibold text-[#1D1D1F] hover:border-blue-500 hover:text-blue-600 transition-all duration-200"
-            >
-              View All Services <ArrowRight className="w-4 h-4" />
-            </Link>
+            <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }} className="inline-block">
+              <Link
+                href="/services"
+                className="inline-flex h-12 items-center gap-2 rounded-full border border-[#D2D2D7] bg-white px-7 text-sm font-semibold text-[#1D1D1F] hover:border-blue-500 hover:text-blue-600 transition-all duration-200"
+              >
+                View All Services <ArrowRight className="w-4 h-4" />
+              </Link>
+            </motion.div>
           </motion.div>
         </div>
       </section>
 
       {/* ═══════════════════════════════════════════════════════════
-           STATS — Dark section, big dynamic numbers
+           STATS — Dark section with counting numbers
       ═══════════════════════════════════════════════════════════ */}
       <section className="py-28 bg-[#1D1D1F] relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] rounded-full bg-blue-600/[0.06] blur-[100px]" />
+          <motion.div
+            animate={{ scale: [1, 1.15, 1], opacity: [0.06, 0.1, 0.06] }}
+            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] rounded-full bg-blue-600 blur-[100px]"
+          />
         </div>
         <div className="container mx-auto px-4 relative">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-12 text-center">
@@ -448,7 +511,7 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════
-           PROCESS — Light, minimal, Apple-like steps
+           PROCESS — Light, animated steps with drawing connector line
       ═══════════════════════════════════════════════════════════ */}
       <section className="py-28 bg-white">
         <div className="container mx-auto px-4">
@@ -468,23 +531,38 @@ export default function Home() {
           </div>
 
           <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-12 relative">
-            <div className="hidden md:block absolute top-10 left-[16%] right-[16%] h-px bg-gradient-to-r from-transparent via-[#D2D2D7] to-transparent" />
+            {/* Animated connector line */}
+            <div className="hidden md:block absolute top-10 left-[16%] right-[16%] h-px overflow-hidden">
+              <motion.div
+                className="h-full bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400"
+                initial={{ scaleX: 0, originX: 0 }}
+                whileInView={{ scaleX: 1 }}
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{ duration: 1.2, ease: "easeInOut", delay: 0.4 }}
+              />
+            </div>
+
             {[
-              { step: "01", title: "Discovery", desc: "We map out your goals, requirements, and vision in a focused kick-off session." },
-              { step: "02", title: "Execution", desc: "Dedicated specialists craft your project with meticulous detail and weekly progress updates." },
-              { step: "03", title: "Delivery", desc: "Polished, production-ready assets delivered on time — with 30 days post-launch support." },
+              { step: "01", title: "Discovery",  desc: "We map out your goals, requirements, and vision in a focused kick-off session." },
+              { step: "02", title: "Execution",  desc: "Dedicated specialists craft your project with meticulous detail and weekly progress updates." },
+              { step: "03", title: "Delivery",   desc: "Polished, production-ready assets delivered on time — with 30 days post-launch support." },
             ].map((s, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.5 }}
-                transition={{ delay: i * 0.15, duration: 0.6 }}
+                transition={{ delay: i * 0.18, duration: 0.6 }}
                 className="text-center"
               >
-                <div className="w-20 h-20 rounded-full bg-white border-2 border-[#E8E8ED] shadow-lg text-blue-600 flex items-center justify-center text-2xl font-black mx-auto mb-8 relative z-10">
+                <motion.div
+                  whileInView={{ scale: [0.5, 1.15, 1] }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.18 + 0.2, duration: 0.5, ease: "easeOut" }}
+                  className="w-20 h-20 rounded-full bg-white border-2 border-[#E8E8ED] shadow-lg text-blue-600 flex items-center justify-center text-2xl font-black mx-auto mb-8 relative z-10"
+                >
                   {s.step}
-                </div>
+                </motion.div>
                 <h3 className="text-xl font-bold text-[#1D1D1F] mb-3">{s.title}</h3>
                 <p className="text-[#6E6E73] leading-relaxed text-sm">{s.desc}</p>
               </motion.div>
@@ -494,11 +572,15 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════
-           CTA — Premium dark gradient
+           CTA — Premium dark gradient with spring buttons
       ═══════════════════════════════════════════════════════════ */}
       <section className="relative overflow-hidden bg-[#06060A] py-32">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[60vh] rounded-full bg-blue-500/15 blur-[100px]" />
+          <motion.div
+            animate={{ scale: [1, 1.1, 1], opacity: [0.15, 0.22, 0.15] }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[60vh] rounded-full bg-blue-500 blur-[100px]"
+          />
           <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-purple-500/10 blur-3xl" />
         </div>
         <div className="container mx-auto px-4 text-center relative z-10">
@@ -519,25 +601,26 @@ export default function Home() {
               extraordinary?
             </span>
           </motion.h2>
-          <motion.p
-            {...fadeUp}
-            className="text-white/50 text-xl max-w-xl mx-auto mb-12 leading-relaxed"
-          >
+          <motion.p {...fadeUp} className="text-white/50 text-xl max-w-xl mx-auto mb-12 leading-relaxed">
             Join {settings.stat_1_value || "200+"} businesses that trust Trivinex Partners to deliver world-class digital work.
           </motion.p>
           <motion.div {...fadeUp} className="flex flex-wrap justify-center gap-4">
-            <Link
-              href="/quote"
-              className="inline-flex h-14 items-center justify-center rounded-full bg-white text-[#06060A] px-8 text-base font-bold shadow-2xl hover:bg-blue-50 transition-all duration-200 hover:-translate-y-0.5"
-            >
-              Start a Project
-            </Link>
-            <Link
-              href="/consultation"
-              className="inline-flex h-14 items-center justify-center rounded-full border border-white/20 text-white px-8 text-base font-semibold hover:bg-white/[0.06] transition-colors duration-200"
-            >
-              Book a Free Call
-            </Link>
+            <motion.div whileHover={{ y: -3, scale: 1.02 }} whileTap={{ scale: 0.97 }}>
+              <Link
+                href="/quote"
+                className="inline-flex h-14 items-center justify-center rounded-full bg-white text-[#06060A] px-8 text-base font-bold shadow-2xl hover:bg-blue-50 transition-colors duration-200"
+              >
+                Start a Project
+              </Link>
+            </motion.div>
+            <motion.div whileHover={{ y: -3 }} whileTap={{ scale: 0.97 }}>
+              <Link
+                href="/consultation"
+                className="inline-flex h-14 items-center justify-center rounded-full border border-white/20 text-white px-8 text-base font-semibold hover:bg-white/[0.06] transition-colors duration-200"
+              >
+                Book a Free Call
+              </Link>
+            </motion.div>
           </motion.div>
         </div>
       </section>
